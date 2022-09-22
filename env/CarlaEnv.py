@@ -542,7 +542,7 @@ class CarlaEnv(object):
                              'events_tmp': [],
                              'img': np.zeros((self.rl_image_size, self.rl_image_size * self.num_cameras, 3), dtype=np.uint8)}
         if self.perception_type.__contains__("vidar"):
-            self.vidar_data = {'frame': [0] * self.num_cameras, 'timestamp': 0.0,
+            self.vidar_data = {'frame': [0] * self.num_cameras, 'timestamp': [0.0] * self.num_cameras,
                                'voltage': np.zeros((self.rl_image_size, self.rl_image_size*self.num_cameras), dtype=np.uint16),
                                'spike': np.zeros((self.rl_image_size, self.rl_image_size*self.num_cameras), dtype=np.bool_),
                                'img': np.zeros((self.rl_image_size, self.rl_image_size*self.num_cameras, 3), dtype=np.uint8)}
@@ -733,16 +733,26 @@ class CarlaEnv(object):
                 array = array[:, :, :3]
                 RGB = array[:, :, ::-1]
                 Y = 0.2990 * RGB[:, :, 0] + 0.5870 * RGB[:, :, 1] + 0.1140 * RGB[:, :, 2]
-                self.vidar_data['frame'] = data.frame
-                self.vidar_data['timestamp'] = data.timestamp
-                self.vidar_data['voltage'][:, one_camera_idx * self.rl_image_size:
-                                          (one_camera_idx + 1) * self.rl_image_size, 1] += Y.astype(np.uint8)
-                self.vidar_data['spike'][:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size, 1] = \
-                    self.vidar_data['voltage'][:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size, 1] > 255
-                self.vidar_data['voltage'] -= (self.vidar_data['spike'] * 255).astype(np.uint8)
-                self.vidar_data['img'][:, one_camera_idx * self.rl_image_size:
-                                          (one_camera_idx + 1) * self.rl_image_size, 1] = \
-                    (self.vidar_data['spike'] * 255).astype(np.uint8)
+
+                # print(self.vidar_data['img'][:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size, 1].shape)
+                # print("!!!:", (self.vidar_data['spike'] * 255).astype(np.uint8).shape)
+
+                self.vidar_data['frame'][one_camera_idx] = data.frame
+                self.vidar_data['timestamp'][one_camera_idx] = data.timestamp
+                self.vidar_data['voltage'][:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size] += Y.astype(np.uint8)
+
+                # if one_camera_idx not in self.vidar_data['camera_done_idx']:
+                #     self.vidar_data['camera_done_idx'].append(one_camera_idx)
+
+                # if len(self.vidar_data['camera_done_idx']) == 5:
+                #     self.vidar_data['camera_done_idx'] = []
+                self.vidar_data['spike'][:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size] = \
+                    self.vidar_data['voltage'][:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size] > 255
+                self.vidar_data['voltage'][:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size] -= \
+                    (self.vidar_data['spike'] * 255)[:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size].astype(np.uint8)
+
+                self.vidar_data['img'][:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size, 1] = \
+                    (self.vidar_data['spike'] * 255)[:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size].astype(np.uint8)
 
             vidar_camera_bp = self.bp_lib.find('sensor.camera.rgb')
             vidar_camera_bp.set_attribute('sensor_tick', f'{1 / self.max_fps}')
@@ -886,19 +896,14 @@ class CarlaEnv(object):
         }
 
         if self.perception_type.__contains__("dvs"):
-            if self.perception_type.__contains__("frame"):
-                next_obs.update({
-                    'dvs_frame': self.dvs_data['img']
-                })
-            elif self.perception_type.__contains__("stream"):
-                next_obs.update({
-                    'dvs_events': self.dvs_data['events']
-                })
+            next_obs.update({
+                'dvs_frame': self.dvs_data['img'],
+                'dvs_events': self.dvs_data['events']
+            })
         if self.perception_type.__contains__("vidar"):
-            if self.perception_type.__contains__("frame"):
-                next_obs.update({
-                    'vidar_frame': self.vidar_data['img']
-                })
+            next_obs.update({
+                'vidar_frame': self.vidar_data['img']
+            })
 
         info['crash_intensity'] = collision_intensities_during_last_time_step
         info['throttle'] = throttle
