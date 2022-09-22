@@ -1,0 +1,35 @@
+{
+  "L1": {
+    "__comment__": "normal sunny",
+    "cloudiness": 10,
+    "precipitation": 0,
+    "precipitation_deposits": 0,
+    "wind_intensity": 0,
+    "fog_density": 0,
+    "fog_distance": 0,
+    "wetness": 0,
+    "sun_azimuth_angle": 0,
+    "sun_altitude_angle": 90
+  },
+  "L2": {
+    "__comment__": "windy ↓ + rainy ↓ (midday)"
+  },
+  "L3": {
+    "__comment__": "rainy ↑ + deposit ↑ + foggy ↑ (midday)"
+  },
+  "L4": {
+    "__comment__": "rainy ↑ + deposit ↑ + dark ↑",
+    "cloudiness": 100,
+    "precipitation": 100,
+    "precipitation_deposits": 100,
+    "wind_intensity": 0,
+    "fog_density": 100,
+    "fog_distance": 0,
+    "wetness": 100,
+    "sun_azimuth_angle": 0,
+    "sun_altitude_angle": -90
+  },
+  "L5": {
+    "__comment__": "windy ↑ + rainy ↑ + foggy ↑ + dark ↑"
+  }
+}
