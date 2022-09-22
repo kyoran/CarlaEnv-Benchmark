@@ -577,7 +577,6 @@ class CarlaEnv(object):
 
         # Perception RGB sensor
         def get_rgb_data(data, one_camera_idx):
-            #             print("get_rgb_img:", one_camera_idx)
             array = np.frombuffer(data.raw_data, dtype=np.dtype("uint8"))
             array = np.reshape(array, (data.height, data.width, 4))
             array = array[:, :, :3]
@@ -587,7 +586,7 @@ class CarlaEnv(object):
             self.rgb_data['img'][:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size, :] = array
 
         rgb_camera_bp = self.bp_lib.find('sensor.camera.rgb')
-        rgb_camera_bp.set_attribute('sensor_tick', f'{self.min_fps}')
+        rgb_camera_bp.set_attribute('sensor_tick', f'{1 / self.min_fps}')
         rgb_camera_bp.set_attribute('image_size_x', str(self.rl_image_size))
         rgb_camera_bp.set_attribute('image_size_y', str(self.rl_image_size))
         rgb_camera_bp.set_attribute('fov', str(self.fov))
