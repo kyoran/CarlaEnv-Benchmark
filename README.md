@@ -1,6 +1,6 @@
 # CarlaEnv-Benchmark
 
-An open source autonomous vehicle benchmark for (multi-task) reinforcement learning.
+An open source benchmark for (multi-task) reinforcement learning of autonomous vehicle.
 
 
 ## Contents
