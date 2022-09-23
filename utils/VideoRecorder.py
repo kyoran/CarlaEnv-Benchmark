@@ -41,10 +41,10 @@ class VideoRecorder(object):
 
     def save(self, file_name):
         if self.enabled:
-            video_frames_path = os.path.join(self.dir_name, "video_frames_" + file_name)
-            rgb_frames_path = os.path.join(self.dir_name, "rgb_frames_" + file_name)
-            dvs_frames_path = os.path.join(self.dir_name, "dvs_frames_" + file_name)
-            vidar_frames_path = os.path.join(self.dir_name, "vidar_frames_" + file_name)
+            video_frames_path = os.path.join(self.dir_name, file_name + "-video")
+            rgb_frames_path = os.path.join(self.dir_name, file_name + "-rgb")
+            dvs_frames_path = os.path.join(self.dir_name, file_name + "-dvs")
+            vidar_frames_path = os.path.join(self.dir_name, file_name + "-vidar")
             
             if len(self.video_frames) > 0:
                 imageio.mimsave(video_frames_path, self.video_frames, fps=self.fps, macro_block_size=2)

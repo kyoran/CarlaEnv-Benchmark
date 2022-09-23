@@ -276,6 +276,7 @@ class CarlaEnv(object):
 
         self.reset_weather()
         self.reset_sensors()
+
         self.reset_sync_mode(True)
 
         self.count = 0
@@ -453,12 +454,12 @@ class CarlaEnv(object):
         self.vehicle_polygons.append(vehicle_poly_dict)
         #         print(f"\tlen of self.vehicle_polygons: {len(self.vehicle_polygons[-1].keys())}")
         #         print(self.vehicle_polygons[-1].keys())
-
         ego_veh_params = self.scenario_params[self.selected_scenario]["ego_veh"]
 
         ego_spawn_times = 0
         max_ego_spawn_times = 20
         while True:
+
 
             if ego_spawn_times > max_ego_spawn_times:
                 #                 print("\tspawn ego vehicle times > max_ego_spawn_times")
@@ -482,14 +483,16 @@ class CarlaEnv(object):
 
             veh_start_pose.location.z += 0.1
 
+
             for idx, poly in self.vehicle_polygons[-1].items():
                 poly_center = np.mean(poly, axis=0)
                 ego_center = np.array([veh_start_pose.location.x, veh_start_pose.location.y])
                 dis = np.linalg.norm(poly_center - ego_center)
-                if dis > 8:
+                if dis > 6:
                     continue
                 else:
                     overlap = True
+
                     break
 
             if not overlap:
@@ -499,6 +502,7 @@ class CarlaEnv(object):
                 )
 
             if self.vehicle is not None:
+
                 #                 physics_control = self.vehicle.get_physics_control()
                 #                 physics_control.gear_switch_time=0.01
                 #                 physics_control.damping_rate_zero_throttle_clutch_engaged=physics_control.damping_rate_zero_throttle_clutch_disengaged
@@ -523,8 +527,10 @@ class CarlaEnv(object):
                 # self.vehicle.set_light_state(carla.libcarla.VehicleLightState.HighBeam)  # HighBeam # LowBeam  # All
                 break
             else:
+
                 ego_spawn_times += 1
-        #             print("ego_spawn_times:", ego_spawn_times)
+
+                # print("ego_spawn_times:", ego_spawn_times)
 
         self.world.tick()
 
