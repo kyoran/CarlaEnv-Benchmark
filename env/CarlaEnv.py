@@ -253,6 +253,8 @@ class CarlaEnv(object):
 
         self._clear_all_objects()
 
+        self._set_dummy_variables()
+
         self.client.reload_world(reset_settings=True)
         self.world = self.client.load_world(self.scenario_params[self.selected_scenario]["map"])
         self.bp_lib = self.world.get_blueprint_library()
