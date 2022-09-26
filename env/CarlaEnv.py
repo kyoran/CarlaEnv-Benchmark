@@ -366,7 +366,6 @@ class CarlaEnv(object):
                         vehicle.set_light_state(carla.VehicleLightState.HighBeam)
 
                         self.tm.auto_lane_change(vehicle, True)
-                        self.tm.auto_lane_change(vehicle, True)
                         self.tm.vehicle_percentage_speed_difference(
                             vehicle, one_type_params[one_part]["speed"])
                         self.tm.ignore_lights_percentage(vehicle, 100)
@@ -378,7 +377,6 @@ class CarlaEnv(object):
                         veh_num -= 1
                         total_surrounding_veh_num += 1
                         print(f"\t spawn vehicle: {total_surrounding_veh_num}, at {veh_pos.location}")
-
 
     def reset_special_vehicles(self):
         pass
@@ -505,11 +503,12 @@ class CarlaEnv(object):
 
             if self.vehicle is not None:
 
-                #                 physics_control = self.vehicle.get_physics_control()
-                #                 physics_control.gear_switch_time=0.01
-                #                 physics_control.damping_rate_zero_throttle_clutch_engaged=physics_control.damping_rate_zero_throttle_clutch_disengaged
-                #                 self.vehicle.apply_physics_control(physics_control)
-                #                 self.vehicle.apply_control(carla.VehicleControl(throttle=0, brake=1, manual_gear_shift=True, gear=1))
+                # immediate running
+                physics_control = self.vehicle.get_physics_control()
+                physics_control.gear_switch_time=0.01
+                physics_control.damping_rate_zero_throttle_clutch_engaged=physics_control.damping_rate_zero_throttle_clutch_disengaged
+                self.vehicle.apply_physics_control(physics_control)
+                self.vehicle.apply_control(carla.VehicleControl(throttle=0, brake=1, manual_gear_shift=True, gear=1))
 
                 # velocity
                 self.tm.vehicle_percentage_speed_difference(self.vehicle, ego_veh_params["speed"])

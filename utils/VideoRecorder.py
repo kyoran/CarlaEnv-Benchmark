@@ -4,6 +4,9 @@
 
 import os
 import imageio
+import numpy as np
+from PIL import ImageFont, ImageDraw, Image
+
 
 class VideoRecorder(object):
     def __init__(self, dir_name, fps):
@@ -28,10 +31,35 @@ class VideoRecorder(object):
         
         self.enabled = self.dir_name is not None and enabled
 
-    def record(self, obs):
+    def record(self, obs, vehicle=None):
         if self.enabled:
             if "video_frame" in obs.keys():
-                self.video_frames.append(obs["video_frame"].copy())
+
+                video_frame = obs["video_frame"].copy()
+
+                if vehicle is not None:
+                    height, width = video_frame.shape[0:2]  # 600, 800
+                    
+                    video_frame = Image.fromarray(video_frame)#.convert("P")
+                    draw = ImageDraw.Draw(video_frame)
+                    # print(video_frame.mode)
+
+                    control = vehicle.get_control()
+                    velocity = vehicle.get_velocity()
+
+                    dw = width - 150
+                    dh = 20
+                    draw.text((dw, dh), f"throttle: {control.throttle:.2f}", fill = (255, 255, 255))
+                    draw.text((dw, dh+20), f"steer: {control.steer:.2f}", fill = (255, 255, 255))
+                    draw.text((dw, dh+40), f"brake: {control.brake:.2f}", fill = (255, 255, 255))
+                    draw.text((dw, dh+60), f"vx: {velocity.x:.2f}", fill = (255, 255, 255))
+                    draw.text((dw, dh+80), f"vy: {velocity.y:.2f}", fill = (255, 255, 255))
+                    # video_frame.show()
+                    video_frame = np.array(video_frame)
+
+                self.video_frames.append(video_frame)
+
+
             if "rgb_frame" in obs.keys():    
                 self.rgb_frames.append(obs["rgb_frame"].copy())
             if "dvs_frame" in obs.keys():
@@ -41,10 +69,10 @@ class VideoRecorder(object):
 
     def save(self, file_name):
         if self.enabled:
-            video_frames_path = os.path.join(self.dir_name, file_name + "-video")
-            rgb_frames_path = os.path.join(self.dir_name, file_name + "-rgb")
-            dvs_frames_path = os.path.join(self.dir_name, file_name + "-dvs")
-            vidar_frames_path = os.path.join(self.dir_name, file_name + "-vidar")
+            video_frames_path = os.path.join(self.dir_name, file_name + "-video.mp4")
+            rgb_frames_path = os.path.join(self.dir_name, file_name + "-rgb.mp4")
+            dvs_frames_path = os.path.join(self.dir_name, file_name + "-dvs.mp4")
+            vidar_frames_path = os.path.join(self.dir_name, file_name + "-vidar.mp4")
             
             if len(self.video_frames) > 0:
                 imageio.mimsave(video_frames_path, self.video_frames, fps=self.fps, macro_block_size=2)
