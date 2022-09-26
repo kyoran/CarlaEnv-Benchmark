@@ -113,7 +113,7 @@ class CarlaEnv(object):
                                                            vehicle_s + carla_waypoint_discretization)
 
         if goal_waypoint is None:
-            print("Episode fail: goal waypoint is off the road! (frame %d)" % self.count)
+            print("Episode fail: goal waypoint is off the road! (frame %d)" % self.time_step)
             done, dist, vel_s = True, 100., 0.
             info['reason_episode_ended'] = 'off_road'
 
@@ -126,7 +126,7 @@ class CarlaEnv(object):
             if len(next_goal_waypoint) != 1:
                 print('warning: {} waypoints (not 1)'.format(len(next_goal_waypoint)))
             if len(next_goal_waypoint) == 0:
-                print("Episode done: no more waypoints left. (frame %d)" % self.count)
+                print("Episode done: no more waypoints left. (frame %d)" % self.time_step)
                 info['reason_episode_ended'] = 'no_waypoints'
                 done, vel_s = True, 0.
             else:
@@ -137,11 +137,11 @@ class CarlaEnv(object):
                 done = False
 
         # not algorithm's fault, but the simulator sometimes throws the car in the air wierdly
-        #         if vehicle_velocity.z > 1. and self.count < 20:
-        #             print("Episode done: vertical velocity too high ({}), usually a simulator glitch (frame {})".format(vehicle_velocity.z, self.count))
+        #         if vehicle_velocity.z > 1. and self.time_step < 20:
+        #             print("Episode done: vertical velocity too high ({}), usually a simulator glitch (frame {})".format(vehicle_velocity.z, self.time_step))
         #             done = True
-        #         if vehicle_location.z > 0.5 and self.count < 20:
-        #             print("Episode done: vertical velocity too high ({}), usually a simulator glitch (frame {})".format(vehicle_location.z, self.count))
+        #         if vehicle_location.z > 0.5 and self.time_step < 20:
+        #             print("Episode done: vertical velocity too high ({}), usually a simulator glitch (frame {})".format(vehicle_location.z, self.time_step))
         #             done = True
 
         return dist, vel_s, speed, done
@@ -181,6 +181,56 @@ class CarlaEnv(object):
             actor_poly_dict[actor.id] = poly
 
         return actor_poly_dict
+
+    def _control_all_walkers(self):
+
+        walker_behavior_params = self.scenario_params[self.selected_scenario]["walker_behavior"]
+
+        for walker in self.walker_actors:
+            loc_x = walker.get_location().x
+            vel_x = walker.get_velocity().x
+            loc_y = walker.get_location().y
+            vel_y = walker.get_velocity().y
+
+            if loc_y > walker_behavior_params["border"]["y"][1]:
+                if self.time_step % self.max_fps != 0 or random.random() > walker_behavior_params["cross_prob"]:
+                    if loc_x > self.scenario_params["walker_behavior"]["border"]["x"][1]:
+                        walker.apply_control(self.backward)
+
+                    elif loc_x > self.scenario_params["walker_behavior"]["border"]["x"][0]:
+                        if vel_x > 0:
+                            walker.apply_control(self.forward)
+                        else:
+                            walker.apply_control(self.backward)
+
+                    else:
+                        walker.apply_control(self.forward)
+
+                else:
+                    walker.apply_control(self.left)
+
+            elif loc_y > walker_behavior_params["border"]["y"][0]:
+                if vel_y > 0:
+                    walker.apply_control(self.right)
+                else:
+                    walker.apply_control(self.left)
+
+            elif self.time_step % self.max_fps != 0 or random.random() > self.scenario_params["walker_behavior"][
+                "cross_prob"]:
+                if loc_x > walker_behavior_params["border"]["x"][1]:
+                    walker.apply_control(self.backward)
+
+                elif loc_x > walker_behavior_params["border"]["x"][0]:
+                    if vel_x > 0:
+                        walker.apply_control(self.forward)
+                    else:
+                        walker.apply_control(self.backward)
+
+                else:
+                    walker.apply_control(self.forward)
+
+            else:
+                walker.apply_control(self.right)
 
     def _clear_all_objects(self):
         # remove all vehicles, walkers, and sensors (in case they survived)
@@ -281,7 +331,7 @@ class CarlaEnv(object):
 
         self.reset_sync_mode(True)
 
-        self.count = 0
+        self.time_step = 0
         self.dist_s = 0
         self.return_ = 0
         self.velocities = []
@@ -295,7 +345,7 @@ class CarlaEnv(object):
             self.world.tick()
             #             action = self.compute_steer_action()
             #             obs, _, _, _ = self.step(action=action)
-            #             self.count -= 1
+            #             self.time_step -= 1
             warm_up_max_steps -= 1
             if warm_up_max_steps < 0 and self.dvs_data['events'] is not None:
                 break
@@ -386,6 +436,17 @@ class CarlaEnv(object):
         total_surrounding_walker_num = 0
 
         walker_params = self.scenario_params[self.selected_scenario]["walker"]
+        walker_behavior_params = self.scenario_params[self.selected_scenario]["walker_behavior"]
+
+        self.left = carla.WalkerControl(direction=carla.Vector3D(y=-1.),
+                                        speed=walker_behavior_params["speed"][1])
+        self.right = carla.WalkerControl(direction=carla.Vector3D(y=1.),
+                                         speed=walker_behavior_params["speed"][1])
+
+        self.forward = carla.WalkerControl(direction=carla.Vector3D(x=1.),
+                                           speed=walker_behavior_params["speed"][0])
+        self.backward = carla.WalkerControl(direction=carla.Vector3D(x=-1.),
+                                            speed=walker_behavior_params["speed"][0])
 
         for one_part in range(len(walker_params)):
 
@@ -416,28 +477,28 @@ class CarlaEnv(object):
                 walker_actor = self.world.try_spawn_actor(rand_walker_bp, walker_pos)
 
                 if walker_actor:
-                    walker_controller_bp = self.world.get_blueprint_library().find('controller.ai.walker')
-                    walker_controller_actor = self.world.spawn_actor(
-                        walker_controller_bp, carla.Transform(), walker_actor)
-                    # start walker
-                    walker_controller_actor.start()
-                    # set walk to random point
-                    #             walker_controller_actor.go_to_location(world.get_random_location_from_navigation())
-                    rand_destination = carla.Location(
-                        x=np.random.uniform(walker_params[one_part]["dest"]["x"][0], walker_params[one_part]["dest"]["x"][1]),
-                        y=random.choice([walker_params[one_part]["dest"]["y"][0], walker_params[one_part]["dest"]["y"][1]]),
-                        z=0.
-                    )
-                    walker_controller_actor.go_to_location(rand_destination)
-                    # random max speed (default is 1.4 m/s)
-                    walker_controller_actor.set_max_speed(
-                        np.random.uniform(
-                            walker_params[one_part]["speed"][0],
-                            walker_params[one_part]["speed"][1]
-                        ))
+                    # walker_controller_bp = self.world.get_blueprint_library().find('controller.ai.walker')
+                    # walker_controller_actor = self.world.spawn_actor(
+                    #     walker_controller_bp, carla.Transform(), walker_actor)
+                    # # start walker
+                    # walker_controller_actor.start()
+                    # # set walk to random point
+                    # #             walker_controller_actor.go_to_location(world.get_random_location_from_navigation())
+                    # rand_destination = carla.Location(
+                    #     x=np.random.uniform(walker_params[one_part]["dest"]["x"][0], walker_params[one_part]["dest"]["x"][1]),
+                    #     y=random.choice([walker_params[one_part]["dest"]["y"][0], walker_params[one_part]["dest"]["y"][1]]),
+                    #     z=0.
+                    # )
+                    # walker_controller_actor.go_to_location(rand_destination)
+                    # # random max speed (default is 1.4 m/s)
+                    # walker_controller_actor.set_max_speed(
+                    #     np.random.uniform(
+                    #         walker_params[one_part]["speed"][0],
+                    #         walker_params[one_part]["speed"][1]
+                    #     ))
+                    # self.walker_ai_actors.append(walker_controller_actor)
 
                     self.walker_actors.append(walker_actor)
-                    self.walker_ai_actors.append(walker_controller_actor)
 
                     self.world.tick()
                     walker_num -= 1
@@ -867,6 +928,8 @@ class CarlaEnv(object):
         )
         self.vehicle.apply_control(vehicle_control)
 
+        self._control_all_walkers()
+
         # Advance the simulation and wait for the data.
         #         self.dvs_data["events"] = None
         self.frame = self.world.tick()
@@ -889,13 +952,13 @@ class CarlaEnv(object):
 
         #         reward = vel_s * dt / (1. + dist_from_center) - 1.0 * colliding - 0.1 * brake - 0.1 * abs(steer)
 
-        collision_cost = 0.0001 * collision_intensities_during_last_time_step
+        collision_cost = 0.001 * collision_intensities_during_last_time_step
         reward = vel_s * dt - collision_cost - abs(steer)
 
         self.dist_s += vel_s * dt
         self.return_ += reward
 
-        self.count += 1
+        self.time_step += 1
 
         next_obs = {
             'video_frame': self.video_data['img'],
@@ -933,13 +996,13 @@ class CarlaEnv(object):
 
         #         assert next_obs["dvs_frame"][::2,:,:].shape == self.observation_space.shape  # (2, 84, 420)
         #         assert next_obs["dvs_events"].shape[1] == self.observation_space.shape[1]
-        if self.count >= self.max_episode_steps:
+        if self.time_step >= self.max_episode_steps:
             info['reason_episode_ended'] = 'success'
             print("Episode success: I've reached the episode horizon ({}).".format(self.max_episode_steps))
             done = True
-        #         if speed < 0.02 and self.count >= 8 * (self.fps) and self.count % 8 * (self.fps) == 0:  # a hack, instead of a counter
-        if speed < 0.02 and self.count >= 100 and self.count % 100 == 0:  # a hack, instead of a counter
-            print("Episode fail: speed too small ({}), think I'm stuck! (frame {})".format(speed, self.count))
+        #         if speed < 0.02 and self.time_step >= 8 * (self.fps) and self.time_step % 8 * (self.fps) == 0:  # a hack, instead of a counter
+        if speed < 0.02 and self.time_step >= 100 and self.time_step % 100 == 0:  # a hack, instead of a counter
+            print("Episode fail: speed too small ({}), think I'm stuck! (frame {})".format(speed, self.time_step))
             info['reason_episode_ended'] = 'stuck'
             done = True
 
@@ -957,9 +1020,9 @@ if __name__ == '__main__':
     import json
 
     # read config files
-    with open('./cfg/weather.json', 'r', encoding='utf8') as fff:
+    with open('../cfg/weather.json', 'r', encoding='utf8') as fff:
         weather_params = json.load(fff)
-    with open('./cfg/scenario.json', 'r', encoding='utf8') as fff:
+    with open('../cfg/scenario.json', 'r', encoding='utf8') as fff:
         scenario_params = json.load(fff)
 
     carla_env = CarlaEnv(
