@@ -189,16 +189,39 @@ class CarlaEnv(object):
         for walker in self.walker_actors:
             if not walker.is_alive:
                 walker.destroy()
-                self.walker_actors.remove(walker)
+                # self.walker_actors.remove(walker)
 
         for walker in self.walker_actors:
-            loc_x = walker.get_location().x
-            vel_x = walker.get_velocity().x
-            loc_y = walker.get_location().y
-            vel_y = walker.get_velocity().y
+            if walker.is_alive:
+                loc_x = walker.get_location().x
+                vel_x = walker.get_velocity().x
+                loc_y = walker.get_location().y
+                vel_y = walker.get_velocity().y
 
-            if loc_y > walker_behavior_params["border"]["y"][1]:
-                if self.time_step % self.max_fps != 0 or random.random() > walker_behavior_params["cross_prob"]:
+                if loc_y > walker_behavior_params["border"]["y"][1]:
+                    if self.time_step % self.max_fps != 0 or random.random() > walker_behavior_params["cross_prob"]:
+                        if loc_x > walker_behavior_params["border"]["x"][1]:
+                            walker.apply_control(self.backward)
+
+                        elif loc_x > walker_behavior_params["border"]["x"][0]:
+                            if vel_x > 0:
+                                walker.apply_control(self.forward)
+                            else:
+                                walker.apply_control(self.backward)
+
+                        else:
+                            walker.apply_control(self.forward)
+
+                    else:
+                        walker.apply_control(self.left)
+
+                elif loc_y > walker_behavior_params["border"]["y"][0]:
+                    if vel_y > 0:
+                        walker.apply_control(self.right)
+                    else:
+                        walker.apply_control(self.left)
+
+                elif self.time_step % self.max_fps != 0 or random.random() > walker_behavior_params["cross_prob"]:
                     if loc_x > walker_behavior_params["border"]["x"][1]:
                         walker.apply_control(self.backward)
 
@@ -212,73 +235,48 @@ class CarlaEnv(object):
                         walker.apply_control(self.forward)
 
                 else:
-                    walker.apply_control(self.left)
-
-            elif loc_y > walker_behavior_params["border"]["y"][0]:
-                if vel_y > 0:
                     walker.apply_control(self.right)
-                else:
-                    walker.apply_control(self.left)
-
-            elif self.time_step % self.max_fps != 0 or random.random() > walker_behavior_params["cross_prob"]:
-                if loc_x > walker_behavior_params["border"]["x"][1]:
-                    walker.apply_control(self.backward)
-
-                elif loc_x > walker_behavior_params["border"]["x"][0]:
-                    if vel_x > 0:
-                        walker.apply_control(self.forward)
-                    else:
-                        walker.apply_control(self.backward)
-
-                else:
-                    walker.apply_control(self.forward)
-
-            else:
-                walker.apply_control(self.right)
 
     def _clear_all_objects(self):
         # remove all vehicles, walkers, and sensors (in case they survived)
         # self.world.tick()
 
-        # actor_list = self.world.get_actors()
-        # print("in clear all")
+        for one_sensor_actor in self.sensor_actors:
+            if one_sensor_actor.is_alive:
+                one_sensor_actor.stop()
+                one_sensor_actor.destroy()
+            # else:
+            #     self.sensor_actors.remove(one_sensor_actor)
 
-        # for one_sensor_actor in self.sensor_actors:
-        #     if one_sensor_actor.is_alive:
-        #         # one_sensor_actor.stop()
-        #         one_sensor_actor.destroy()
+        # # self.vidar_data['voltage'] = np.zeros((self.obs_size, self.obs_size), dtype=np.uint16)
+
+        for one_vehicle_actor in self.vehicle_actors:
+            if one_vehicle_actor.is_alive:
+                one_vehicle_actor.destroy()
+            # else:
+            #     self.vehicle_actors.remove(one_vehicle_actor)
+
+
+        # for one_walker_ai_actor in self.walker_ai_actors:
+        #     if one_walker_ai_actor.is_alive:
+        #         one_walker_ai_actor.stop()
+        #         one_walker_ai_actor.destroy()
         #     else:
-        #         self.sensor_actors.remove(one_sensor_actor)
+        #         self.vehicle_actors.remove(one_walker_ai_actor)
 
-        # # # self.vidar_data['voltage'] = np.zeros((self.obs_size, self.obs_size), dtype=np.uint16)
-
-        # for one_vehicle_actor in self.vehicle_actors:
-        #     if one_vehicle_actor.is_alive:
-        #         one_vehicle_actor.destroy()
-        #     else:
-        #         self.vehicle_actors.remove(one_vehicle_actor)
+        for one_walker_actor in self.walker_actors:
+            if one_walker_actor.is_alive:
+                one_walker_actor.destroy()
+            # else:
+            #     self.walker_actors.remove(one_walker_actor)
 
 
-        # # for one_walker_ai_actor in self.walker_ai_actors:
-        # #     if one_walker_ai_actor.is_alive:
-        # #         one_walker_ai_actor.stop()
-        # #         one_walker_ai_actor.destroy()
-        # #     else:
-        # #         self.vehicle_actors.remove(one_walker_ai_actor)
-
-        # for one_walker_actor in self.walker_actors:
-        #     if one_walker_actor.is_alive:
-        #         one_walker_actor.destroy()
-        #     else:
-        #         self.walker_actors.remove(one_walker_actor)
-
-
-        for actor_filter in ['vehicle.*', 'controller.ai.walker', 'walker.*', 'sensor*']:
-            for actor in self.world.get_actors().filter(actor_filter):
-                if actor.is_alive:
-                    if actor.type_id == 'controller.ai.walker':
-                        actor.stop()
-                    actor.destroy()
+        # for actor_filter in ['vehicle.*', 'controller.ai.walker', 'walker.*', 'sensor*']:
+        #     for actor in self.world.get_actors().filter(actor_filter):
+        #         if actor.is_alive:
+        #             if actor.type_id == 'controller.ai.walker':
+        #                 actor.stop()
+        #             actor.destroy()
 
         # for one_vehicle_actor in self.vehicle_actors:
         #     one_vehicle_actor.destroy()
@@ -544,9 +542,25 @@ class CarlaEnv(object):
         max_ego_spawn_times = 20
 
         while True:
-            if ego_spawn_times > max_ego_spawn_times:
-                print("\tspawn ego vehicle times > max_ego_spawn_times")
-                self.reset()
+            # print("ego_spawn_times:", ego_spawn_times)
+            # if ego_spawn_times > max_ego_spawn_times:
+
+            #     ego_spawn_times = 0
+
+            #     print("\tspawn ego vehicle times > max_ego_spawn_times")
+            #     # self.reset()
+            #     for one_vehicle_actor in self.vehicle_actors:
+            #         if one_vehicle_actor.is_alive:
+            #             one_vehicle_actor.destroy()
+            #     print("111")
+            #     self.reset_surrounding_vehicles()
+            #     print("333")
+            #     self.reset_special_vehicles()
+            #     print("444")
+            #     self.reset_walkers()
+            #     print("555")
+
+            #     continue
 
             # Check if ego position overlaps with surrounding vehicles
             overlap = False
@@ -570,7 +584,7 @@ class CarlaEnv(object):
                 poly_center = np.mean(poly, axis=0)
                 ego_center = np.array([veh_start_pose.location.x, veh_start_pose.location.y])
                 dis = np.linalg.norm(poly_center - ego_center)
-                if dis > 6:
+                if dis > 5:
                     continue
                 else:
                     overlap = True
@@ -587,7 +601,7 @@ class CarlaEnv(object):
 
                 # immediate running
                 physics_control = self.vehicle.get_physics_control()
-                physics_control.gear_switch_time=0.01
+                physics_control.gear_switch_time = 0.01
                 physics_control.damping_rate_zero_throttle_clutch_engaged=physics_control.damping_rate_zero_throttle_clutch_disengaged
                 self.vehicle.apply_physics_control(physics_control)
                 self.vehicle.apply_control(carla.VehicleControl(throttle=0, brake=1, manual_gear_shift=True, gear=1))
@@ -657,7 +671,7 @@ class CarlaEnv(object):
             carla.Transform(carla.Location(x=-5.5, z=3.5), carla.Rotation(pitch=-15)),
             attach_to=self.vehicle)
         self.third_person_camera_rgb.listen(lambda data: get_video_data(data))
-        # self.sensors.append(self.third_person_camera_rgb)
+        self.sensor_actors.append(self.third_person_camera_rgb)
 
         #         print("\t video sensor init done.")
 
