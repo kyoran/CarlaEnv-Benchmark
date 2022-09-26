@@ -18,7 +18,7 @@
       ],
       "start_pos": [
         0.2,
-        2.2
+        4
       ],
       "speed": -20
     },
@@ -53,7 +53,7 @@
     "special_veh": [],
     "walker": [
       {
-        "num": 10,
+        "num": 15,
         "road_id": 12,
         "lane_id": [
           -3
@@ -64,7 +64,7 @@
         ]
       },
       {
-        "num": 10,
+        "num": 15,
         "road_id": 12,
         "lane_id": [
           3

@@ -187,6 +187,11 @@ class CarlaEnv(object):
         walker_behavior_params = self.scenario_params[self.selected_scenario]["walker_behavior"]
 
         for walker in self.walker_actors:
+            if not walker.is_alive:
+                walker.destroy()
+                self.walker_actors.remove(walker)
+
+        for walker in self.walker_actors:
             loc_x = walker.get_location().x
             vel_x = walker.get_velocity().x
             loc_y = walker.get_location().y
@@ -194,10 +199,10 @@ class CarlaEnv(object):
 
             if loc_y > walker_behavior_params["border"]["y"][1]:
                 if self.time_step % self.max_fps != 0 or random.random() > walker_behavior_params["cross_prob"]:
-                    if loc_x > self.scenario_params["walker_behavior"]["border"]["x"][1]:
+                    if loc_x > walker_behavior_params["border"]["x"][1]:
                         walker.apply_control(self.backward)
 
-                    elif loc_x > self.scenario_params["walker_behavior"]["border"]["x"][0]:
+                    elif loc_x > walker_behavior_params["border"]["x"][0]:
                         if vel_x > 0:
                             walker.apply_control(self.forward)
                         else:
@@ -215,8 +220,7 @@ class CarlaEnv(object):
                 else:
                     walker.apply_control(self.left)
 
-            elif self.time_step % self.max_fps != 0 or random.random() > self.scenario_params["walker_behavior"][
-                "cross_prob"]:
+            elif self.time_step % self.max_fps != 0 or random.random() > walker_behavior_params["cross_prob"]:
                 if loc_x > walker_behavior_params["border"]["x"][1]:
                     walker.apply_control(self.backward)
 
@@ -237,31 +241,44 @@ class CarlaEnv(object):
         # self.world.tick()
 
         # actor_list = self.world.get_actors()
+        # print("in clear all")
 
-        for one_sensor_actor in self.sensor_actors:
-            one_sensor_actor.destroy()
+        # for one_sensor_actor in self.sensor_actors:
+        #     if one_sensor_actor.is_alive:
+        #         # one_sensor_actor.stop()
+        #         one_sensor_actor.destroy()
+        #     else:
+        #         self.sensor_actors.remove(one_sensor_actor)
 
-        # self.vidar_data['voltage'] = np.zeros((self.obs_size, self.obs_size), dtype=np.uint16)
+        # # # self.vidar_data['voltage'] = np.zeros((self.obs_size, self.obs_size), dtype=np.uint16)
 
-        for one_vehicle_actor in self.vehicle_actors:
-            if one_vehicle_actor.is_alive:
-                one_vehicle_actor.destroy()
+        # for one_vehicle_actor in self.vehicle_actors:
+        #     if one_vehicle_actor.is_alive:
+        #         one_vehicle_actor.destroy()
+        #     else:
+        #         self.vehicle_actors.remove(one_vehicle_actor)
 
-        for one_walker_ai_actor in self.walker_ai_actors:
-            if one_walker_ai_actor.is_alive:
-                one_walker_ai_actor.stop()
-                one_walker_ai_actor.destroy()
 
-        for one_walker_actor in self.walker_actors:
-            if one_walker_actor.is_alive:
-                one_walker_actor.destroy()
+        # # for one_walker_ai_actor in self.walker_ai_actors:
+        # #     if one_walker_ai_actor.is_alive:
+        # #         one_walker_ai_actor.stop()
+        # #         one_walker_ai_actor.destroy()
+        # #     else:
+        # #         self.vehicle_actors.remove(one_walker_ai_actor)
 
-        # for actor_filter in ['vehicle.*', 'controller.ai.walker', 'walker.*']:
-        #     for actor in self.world.get_actors().filter(actor_filter):
-        #         if actor.is_alive:
-        #             if actor.type_id == 'controller.ai.walker':
-        #                 actor.stop()
-        #             actor.destroy()
+        # for one_walker_actor in self.walker_actors:
+        #     if one_walker_actor.is_alive:
+        #         one_walker_actor.destroy()
+        #     else:
+        #         self.walker_actors.remove(one_walker_actor)
+
+
+        for actor_filter in ['vehicle.*', 'controller.ai.walker', 'walker.*', 'sensor*']:
+            for actor in self.world.get_actors().filter(actor_filter):
+                if actor.is_alive:
+                    if actor.type_id == 'controller.ai.walker':
+                        actor.stop()
+                    actor.destroy()
 
         # for one_vehicle_actor in self.vehicle_actors:
         #     one_vehicle_actor.destroy()
@@ -338,18 +355,18 @@ class CarlaEnv(object):
 
         # warm up !!!!!!
         # take some steps to get ready for the dvs camera, walkers, and vehicles
-        warm_up_max_steps = 5
-        self.vehicle.set_autopilot(True, self.carla_tm_port)
-        while abs(self.vehicle.get_velocity().x) < 0.02:
-            #             print("!!!take one init step", warm_up_max_steps, self.vehicle.get_control(), self.vehicle.get_velocity())
-            self.world.tick()
-            #             action = self.compute_steer_action()
-            #             obs, _, _, _ = self.step(action=action)
-            #             self.time_step -= 1
-            warm_up_max_steps -= 1
-            if warm_up_max_steps < 0 and self.dvs_data['events'] is not None:
-                break
-        self.vehicle.set_autopilot(False, self.carla_tm_port)
+        # warm_up_max_steps = 5
+        # self.vehicle.set_autopilot(True, self.carla_tm_port)
+        # while abs(self.vehicle.get_velocity().x) < 0.02:
+        #     #             print("!!!take one init step", warm_up_max_steps, self.vehicle.get_control(), self.vehicle.get_velocity())
+        #     self.world.tick()
+        #     #             action = self.compute_steer_action()
+        #     #             obs, _, _, _ = self.step(action=action)
+        #     #             self.time_step -= 1
+        #     warm_up_max_steps -= 1
+        #     if warm_up_max_steps < 0 and self.dvs_data['events'] is not None:
+        #         break
+        # self.vehicle.set_autopilot(False, self.carla_tm_port)
 
         obs, _, _, _ = self.step(None)
 
@@ -377,7 +394,7 @@ class CarlaEnv(object):
 
             one_type_params = self.scenario_params[self.selected_scenario][one_type]
 
-            print("now at:", one_type)
+            # print("now at:", one_type)
 
             for one_part in range(len(one_type_params)):
 
@@ -426,7 +443,7 @@ class CarlaEnv(object):
 
                         veh_num -= 1
                         total_surrounding_veh_num += 1
-                        print(f"\t spawn vehicle: {total_surrounding_veh_num}, at {veh_pos.location}")
+                        # print(f"\t spawn vehicle: {total_surrounding_veh_num}, at {veh_pos.location}")
 
     def reset_special_vehicles(self):
         pass
@@ -503,7 +520,7 @@ class CarlaEnv(object):
                     self.world.tick()
                     walker_num -= 1
                     total_surrounding_walker_num += 1
-                    print(f"\t spawn walker: {total_surrounding_walker_num}, at {walker_pos.location}")
+                    # print(f"\t spawn walker: {total_surrounding_walker_num}, at {walker_pos.location}")
 
     def reset_ego_vehicle(self):
 
@@ -519,11 +536,10 @@ class CarlaEnv(object):
 
         ego_spawn_times = 0
         max_ego_spawn_times = 20
+
         while True:
-
-
             if ego_spawn_times > max_ego_spawn_times:
-                #                 print("\tspawn ego vehicle times > max_ego_spawn_times")
+                print("\tspawn ego vehicle times > max_ego_spawn_times")
                 self.reset()
 
             # Check if ego position overlaps with surrounding vehicles
@@ -541,7 +557,6 @@ class CarlaEnv(object):
                 lane_id=spawn_lane_id,
                 s=spawn_start_s,
             ).transform
-
             veh_start_pose.location.z += 0.1
 
 
