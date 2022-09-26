@@ -324,6 +324,12 @@ class CarlaEnv(object):
 
         self.client.reload_world(reset_settings=True)
         self.world = self.client.load_world(self.scenario_params[self.selected_scenario]["map"])
+
+        # remove dynamic objects to prevent 'tables' and 'chairs' flying in the sky
+        env_objs = self.world.get_environment_objects(carla.CityObjectLabel.Dynamic)
+        objects_to_toggle = set([one_env_obj.id for one_env_obj in env_objs])
+        self.world.enable_environment_objects(objects_to_toggle, False)
+
         self.bp_lib = self.world.get_blueprint_library()
         self.map = self.world.get_map()
 
