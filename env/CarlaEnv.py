@@ -149,7 +149,7 @@ class CarlaEnv(object):
     def _on_collision(self, event):
         impulse = event.normal_impulse
         intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
-        print('Collision (intensity {})'.format(intensity))
+        # print('Collision (intensity {})'.format(intensity))
         self._collision_intensities_during_last_time_step.append(intensity)
 
     def _get_actor_polygons(self, filt):
@@ -186,10 +186,11 @@ class CarlaEnv(object):
 
         walker_behavior_params = self.scenario_params[self.selected_scenario]["walker_behavior"]
 
-        for walker in self.walker_actors:
-            if not walker.is_alive:
-                walker.destroy()
-                # self.walker_actors.remove(walker)
+        # if walker is dead 
+        # for walker in self.walker_actors:
+        #     if not walker.is_alive:
+        #         walker.destroy()
+        #         self.walker_actors.remove(walker)
 
         for walker in self.walker_actors:
             if walker.is_alive:
@@ -320,7 +321,7 @@ class CarlaEnv(object):
 
         self._set_dummy_variables()
 
-        self.client.reload_world(reset_settings=True)
+        # self.client.reload_world(reset_settings=True)
         self.world = self.client.load_world(self.scenario_params[self.selected_scenario]["map"])
 
         # remove dynamic objects to prevent 'tables' and 'chairs' flying in the sky
