@@ -61,6 +61,8 @@ class CarlaEnv(object):
         self.walker_ai_actors = []
         self.walker_actors = []
 
+        self.reset_num = 0
+
         # reset
         self.reset()
 
@@ -238,38 +240,34 @@ class CarlaEnv(object):
                 else:
                     walker.apply_control(self.right)
 
-    def _clear_all_objects(self):
+    def _clear_all_actors(self):
         # remove all vehicles, walkers, and sensors (in case they survived)
         self.world.tick()
 
-        for one_sensor_actor in self.sensor_actors:
-            if one_sensor_actor.is_alive:
-                one_sensor_actor.stop()
-                one_sensor_actor.destroy()
-            # else:
-            #     self.sensor_actors.remove(one_sensor_actor)
+        if 'vehicle' in dir(self) and self.vehicle is not None:
+            for one_sensor_actor in self.sensor_actors:
+                if one_sensor_actor.is_alive:
+                    one_sensor_actor.stop()
+                    one_sensor_actor.destroy()
 
         # # self.vidar_data['voltage'] = np.zeros((self.obs_size, self.obs_size), dtype=np.uint16)
+        for actor_filter in ['vehicle.*', 'walker.*']:
+            for actor in self.world.get_actors().filter(actor_filter):
+                if actor.is_alive:
+                    actor.destroy()
 
-        for one_vehicle_actor in self.vehicle_actors:
-            if one_vehicle_actor.is_alive:
-                one_vehicle_actor.destroy()
-            # else:
-            #     self.vehicle_actors.remove(one_vehicle_actor)
-
+        # for one_vehicle_actor in self.vehicle_actors:
+        #     if one_vehicle_actor.is_alive:
+        #         one_vehicle_actor.destroy()
 
         # for one_walker_ai_actor in self.walker_ai_actors:
         #     if one_walker_ai_actor.is_alive:
         #         one_walker_ai_actor.stop()
         #         one_walker_ai_actor.destroy()
-        #     else:
-        #         self.vehicle_actors.remove(one_walker_ai_actor)
 
-        for one_walker_actor in self.walker_actors:
-            if one_walker_actor.is_alive:
-                one_walker_actor.destroy()
-            # else:
-            #     self.walker_actors.remove(one_walker_actor)
+        # for one_walker_actor in self.walker_actors:
+        #     if one_walker_actor.is_alive:
+        #         one_walker_actor.destroy()
 
 
         # for actor_filter in ['vehicle.*', 'controller.ai.walker', 'walker.*', 'sensor*']:
@@ -278,28 +276,6 @@ class CarlaEnv(object):
         #             if actor.type_id == 'controller.ai.walker':
         #                 actor.stop()
         #             actor.destroy()
-
-        # for one_vehicle_actor in self.vehicle_actors:
-        #     one_vehicle_actor.destroy()
-
-        # for one_sensor_actor in self.sensor_actors:
-        #     one_sensor_actor.stop() 
-        #     one_sensor_actor.destroy()
-
-        # for one_walker_ai_actor in self.walker_ai_actors:
-        #     one_walker_ai_actor.destroy()
-
-        # for one_walker_actor in self.walker_actors:
-        #     one_walker_actor.destroy()
-
-        # for sensor in actor_list.filter("*sensor*"):
-        #     sensor.destroy()
-
-        # for vehicle in actor_list.filter("*vehicle*"):
-        #     vehicle.destroy()
-
-        # for walker in actor_list.filter("*walker*"):
-        #     walker.destroy()
 
         self.vehicle_actors = []
         self.sensor_actors = []
@@ -310,35 +286,30 @@ class CarlaEnv(object):
 
     def reset(self):
 
-        # remove event callbacks
-        #         self.world.remove_on_tick(self.sync_mode.callback_id)
-        # [one_sensor.stop() for one_sensor in self.sensors]
+        self._clear_all_actors()
 
-        #         self.world = self.client.reload_world() # 0.9.9.4
-        #         self.world = self.client.reload_world(reset_settings=False)
+        if self.reset_num == 0:
 
-        self._clear_all_objects()
+            self._set_dummy_variables()
 
-        self._set_dummy_variables()
+            # self.client.reload_world(reset_settings=True)
+            self.world = self.client.load_world(self.scenario_params[self.selected_scenario]["map"])
 
-        # self.client.reload_world(reset_settings=True)
-        self.world = self.client.load_world(self.scenario_params[self.selected_scenario]["map"])
+            # remove dynamic objects to prevent 'tables' and 'chairs' flying in the sky
+            env_objs = self.world.get_environment_objects(carla.CityObjectLabel.Dynamic)
+            objects_to_toggle = set([one_env_obj.id for one_env_obj in env_objs])
+            self.world.enable_environment_objects(objects_to_toggle, False)
 
-        # remove dynamic objects to prevent 'tables' and 'chairs' flying in the sky
-        env_objs = self.world.get_environment_objects(carla.CityObjectLabel.Dynamic)
-        objects_to_toggle = set([one_env_obj.id for one_env_obj in env_objs])
-        self.world.enable_environment_objects(objects_to_toggle, False)
+            self.bp_lib = self.world.get_blueprint_library()
+            self.map = self.world.get_map()
 
-        self.bp_lib = self.world.get_blueprint_library()
-        self.map = self.world.get_map()
-
-        # tm
-        self.tm = self.client.get_trafficmanager(self.carla_tm_port)
-        self.tm_port = self.tm.get_port()
-        self.tm.set_global_distance_to_leading_vehicle(2.0)
-        
-        # lm
-        self.lm = self.world.get_lightmanager()
+            # tm
+            self.tm = self.client.get_trafficmanager(self.carla_tm_port)
+            self.tm_port = self.tm.get_port()
+            self.tm.set_global_distance_to_leading_vehicle(2.0)
+            
+            # lm
+            self.lm = self.world.get_lightmanager()
 
         # reset
         self.reset_sync_mode(False)
@@ -377,6 +348,8 @@ class CarlaEnv(object):
 
         print("carla env reset done.")
 
+        self.reset_num += 1
+        
         return obs
 
     def reset_sync_mode(self, synchronous_mode=True):

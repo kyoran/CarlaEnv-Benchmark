@@ -1,6 +1,7 @@
 import carla
 
 import json
+import time
 import matplotlib.pyplot as plt
 
 
@@ -38,7 +39,6 @@ if __name__ == '__main__':
         max_episode_steps=1000,
         frame_skip=1,
     )
-
 
     # [3] creating recorder
     video = VideoRecorder("./video", fps=fps)
