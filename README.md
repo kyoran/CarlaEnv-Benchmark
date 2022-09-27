@@ -8,6 +8,7 @@ An open source benchmark for (multi-task) reinforcement learning of autonomous v
 - Requirements
 - Installation
 - Usage
+- Settings
 - Citation
 - Acknowledgements
 
@@ -77,22 +78,18 @@ video = VideoRecorder("./video", fps=30)
 - testing and recording environment:
 ```
 obs = carla_env.reset()
-
 video.init(True)
- 
 for one_step in range(400):
-
-    if one_step <= 50:
-        action = [0, 0.7]
-    else:
-        action = [0, -0.3]
-
+    action = [0, 0.7]
     obs, reward, done, info = carla_env.step(action)
-
     video.record(obs, carla_env.vehicle)
-
 video.save("test")
 ```
+
+Finally, we can get recorded video in the 'video' directory.
+
+## Settings
+
 
 ## Citation
 

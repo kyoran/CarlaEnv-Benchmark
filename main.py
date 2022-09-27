@@ -19,7 +19,7 @@ if __name__ == '__main__':
     with open('./cfg/scenario.json', 'r', encoding='utf8') as fff:
         scenario_params = json.load(fff)
 
-    fps = 20
+    fps = 30
 
     # [2] creating env
     carla_env = CarlaEnv(
@@ -50,8 +50,9 @@ if __name__ == '__main__':
     for one_episode in range(max_episode_num):
         
         try:
-            print("starting episode:", one_episode+1)
             obs = carla_env.reset()
+
+            print("starting episode:", one_episode+1, "init-frame:", carla_env.frame)
 
             video.init(True) 
             for one_step in range(max_step_num):
@@ -65,8 +66,7 @@ if __name__ == '__main__':
 
                 video.record(obs, carla_env.vehicle)
 
-
-                print(f"\rframe: {carla_env.frame}", end="")
+                print(f"\r\tstep: {one_step+1}, frame: {carla_env.frame}", end="")
 
         except Exception as e:
             print(e)

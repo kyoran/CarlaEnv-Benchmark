@@ -66,6 +66,41 @@ class CarlaEnv(object):
         # reset
         self.reset()
 
+    def _init_blueprints(self):
+
+        self.bp_lib = self.world.get_blueprint_library()
+
+        self.collision_bp = self.bp_lib.find('sensor.other.collision')
+
+        self.video_camera_bp = self.bp_lib.find('sensor.camera.rgb')
+
+        self.rgb_camera_bp = self.bp_lib.find('sensor.camera.rgb')
+        self.rgb_camera_bp.set_attribute('sensor_tick', f'{1 / self.min_fps}')
+        self.rgb_camera_bp.set_attribute('image_size_x', str(self.rl_image_size))
+        self.rgb_camera_bp.set_attribute('image_size_y', str(self.rl_image_size))
+        self.rgb_camera_bp.set_attribute('fov', str(self.fov))
+        self.rgb_camera_bp.set_attribute('enable_postprocess_effects', str(True))
+
+        self.dvs_camera_bp = self.bp_lib.find('sensor.camera.dvs')
+        self.dvs_camera_bp.set_attribute('sensor_tick', f'{1 / self.max_fps}')
+        #         dvs_camera_bp.set_attribute('positive_threshold', str(0.3))
+        #         dvs_camera_bp.set_attribute('negative_threshold', str(0.3))
+        #         dvs_camera_bp.set_attribute('sigma_positive_threshold', str(0))
+        #         dvs_camera_bp.set_attribute('sigma_negative_threshold', str(0))
+        self.dvs_camera_bp.set_attribute('image_size_x', str(self.rl_image_size))
+        self.dvs_camera_bp.set_attribute('image_size_y', str(self.rl_image_size))
+        self.dvs_camera_bp.set_attribute('fov', str(self.fov))
+        self.dvs_camera_bp.set_attribute('enable_postprocess_effects', str(True))
+
+
+        self.vidar_camera_bp = self.bp_lib.find('sensor.camera.rgb')
+        self.vidar_camera_bp.set_attribute('sensor_tick', f'{1 / self.max_fps}')
+        self.vidar_camera_bp.set_attribute('image_size_x', str(self.rl_image_size))
+        self.vidar_camera_bp.set_attribute('image_size_y', str(self.rl_image_size))
+        self.vidar_camera_bp.set_attribute('fov', str(self.fov))
+        self.vidar_camera_bp.set_attribute('enable_postprocess_effects', str(True))
+
+
     def _set_dummy_variables(self):
         # dummy variables given bisim's assumption on deep-mind-control suite APIs
         low = -1.0
@@ -299,9 +334,11 @@ class CarlaEnv(object):
             env_objs = self.world.get_environment_objects(carla.CityObjectLabel.Dynamic)
             objects_to_toggle = set([one_env_obj.id for one_env_obj in env_objs])
             self.world.enable_environment_objects(objects_to_toggle, False)
-
-            self.bp_lib = self.world.get_blueprint_library()
             self.map = self.world.get_map()
+
+            # bp
+            self._init_blueprints()
+
 
             # tm
             self.tm = self.client.get_trafficmanager(self.carla_tm_port)
@@ -329,9 +366,13 @@ class CarlaEnv(object):
         self.return_ = 0
         self.velocities = []
 
-        # warm up !!!!!!
+        # MUST warm up !!!!!!
         # take some steps to get ready for the dvs camera, walkers, and vehicles
-        # warm_up_max_steps = 5
+        warm_up_max_steps = 15
+        while warm_up_max_steps > 0:
+            warm_up_max_steps -= 1
+            self.world.tick()
+            
         # self.vehicle.set_autopilot(True, self.carla_tm_port)
         # while abs(self.vehicle.get_velocity().x) < 0.02:
         #     #             print("!!!take one init step", warm_up_max_steps, self.vehicle.get_control(), self.vehicle.get_velocity())
@@ -349,17 +390,23 @@ class CarlaEnv(object):
         print("carla env reset done.")
 
         self.reset_num += 1
-        
+
         return obs
 
     def reset_sync_mode(self, synchronous_mode=True):
+
         self.delta_seconds = 1.0 / self.max_fps
+        # max_substep_delta_time = 0.005
 
         #         self._settings = self.world.get_settings()
         self.frame = self.world.apply_settings(carla.WorldSettings(
             no_rendering_mode=False,
             synchronous_mode=synchronous_mode,
-            fixed_delta_seconds=self.delta_seconds))
+            fixed_delta_seconds=self.delta_seconds,
+            # substepping=True,
+            # max_substep_delta_time=0.005,
+            # max_substeps=int(self.delta_seconds/max_substep_delta_time)
+            ))
         self.tm.set_synchronous_mode(synchronous_mode)
 
     def reset_surrounding_vehicles(self):
@@ -513,7 +560,7 @@ class CarlaEnv(object):
         ego_veh_params = self.scenario_params[self.selected_scenario]["ego_veh"]
 
         ego_spawn_times = 0
-        max_ego_spawn_times = 20
+        # max_ego_spawn_times = 20
 
         while True:
             # print("ego_spawn_times:", ego_spawn_times)
@@ -599,8 +646,8 @@ class CarlaEnv(object):
                 break
             else:
 
-                ego_spawn_times += 1
-
+                # ego_spawn_times += 1
+                time.sleep(0.1)
                 # print("ego_spawn_times:", ego_spawn_times)
 
         self.world.tick()
@@ -631,7 +678,7 @@ class CarlaEnv(object):
         #         self.world.on_tick(on_tick_func)
 
         # Third person perspective
-        def get_video_data(data):
+        def __get_video_data__(data):
             array = np.frombuffer(data.raw_data, dtype=np.dtype("uint8"))
             array = np.reshape(array, (data.height, data.width, 4))
             array = array[:, :, :3]
@@ -640,12 +687,12 @@ class CarlaEnv(object):
             self.video_data['timestamp'] = data.timestamp
             self.video_data['img'] = array
 
-        self.third_person_camera_rgb = self.world.spawn_actor(
-            self.bp_lib.find('sensor.camera.rgb'),
+        self.video_camera_rgb = self.world.spawn_actor(
+            self.video_camera_bp,
             carla.Transform(carla.Location(x=-5.5, z=3.5), carla.Rotation(pitch=-15)),
             attach_to=self.vehicle)
-        self.third_person_camera_rgb.listen(lambda data: get_video_data(data))
-        self.sensor_actors.append(self.third_person_camera_rgb)
+        self.video_camera_rgb.listen(lambda data: __get_video_data__(data))
+        self.sensor_actors.append(self.video_camera_rgb)
 
         #         print("\t video sensor init done.")
 
@@ -653,7 +700,7 @@ class CarlaEnv(object):
         location = carla.Location(x=1.6, z=1.7)
 
         # Perception RGB sensor
-        def get_rgb_data(data, one_camera_idx):
+        def __get_rgb_data__(data, one_camera_idx):
             array = np.frombuffer(data.raw_data, dtype=np.dtype("uint8"))
             array = np.reshape(array, (data.height, data.width, 4))
             array = array[:, :, :3]
@@ -662,27 +709,22 @@ class CarlaEnv(object):
             self.rgb_data['timestamp'][one_camera_idx] = data.timestamp
             self.rgb_data['img'][:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size, :] = array
 
-        rgb_camera_bp = self.bp_lib.find('sensor.camera.rgb')
-        rgb_camera_bp.set_attribute('sensor_tick', f'{1 / self.min_fps}')
-        rgb_camera_bp.set_attribute('image_size_x', str(self.rl_image_size))
-        rgb_camera_bp.set_attribute('image_size_y', str(self.rl_image_size))
-        rgb_camera_bp.set_attribute('fov', str(self.fov))
-        rgb_camera_bp.set_attribute('enable_postprocess_effects', str(True))
+        
 
         self.rgb_camera_left2 = self.world.spawn_actor(
-            rgb_camera_bp, carla.Transform(location, carla.Rotation(yaw=-2 * float(self.fov))),
+            self.rgb_camera_bp, carla.Transform(location, carla.Rotation(yaw=-2 * float(self.fov))),
             attach_to=self.vehicle)
         self.rgb_camera_left1 = self.world.spawn_actor(
-            rgb_camera_bp, carla.Transform(location, carla.Rotation(yaw=-float(self.fov))),
+            self.rgb_camera_bp, carla.Transform(location, carla.Rotation(yaw=-float(self.fov))),
             attach_to=self.vehicle)
         self.rgb_camera_mid = self.world.spawn_actor(
-            rgb_camera_bp, carla.Transform(location, carla.Rotation(yaw=0.0)),
+            self.rgb_camera_bp, carla.Transform(location, carla.Rotation(yaw=0.0)),
             attach_to=self.vehicle)
         self.rgb_camera_right1 = self.world.spawn_actor(
-            rgb_camera_bp, carla.Transform(location, carla.Rotation(yaw=float(self.fov))),
+            self.rgb_camera_bp, carla.Transform(location, carla.Rotation(yaw=float(self.fov))),
             attach_to=self.vehicle)
         self.rgb_camera_right2 = self.world.spawn_actor(
-            rgb_camera_bp, carla.Transform(location, carla.Rotation(yaw=2 * float(self.fov))),
+            self.rgb_camera_bp, carla.Transform(location, carla.Rotation(yaw=2 * float(self.fov))),
             attach_to=self.vehicle)
 
         for one_camera_idx, one_rgb_camera in enumerate([
@@ -691,7 +733,7 @@ class CarlaEnv(object):
             self.rgb_camera_right1, self.rgb_camera_right2
         ]):
             #             print("listen rgb:", one_camera_idx)
-            one_rgb_camera.listen(lambda data, one_camera_idx=one_camera_idx: get_rgb_data(data, one_camera_idx))
+            one_rgb_camera.listen(lambda data, one_camera_idx=one_camera_idx: __get_rgb_data__(data, one_camera_idx))
 
         self.sensor_actors.append(self.rgb_camera_left2)
         self.sensor_actors.append(self.rgb_camera_left1)
@@ -703,7 +745,7 @@ class CarlaEnv(object):
 
         # Perception DVS sensor
         if self.perception_type.__contains__("dvs"):
-            def get_dvs_data(data, one_camera_idx):
+            def __get_dvs_data__(data, one_camera_idx):
                 #             print("get_dvs_data:", one_camera_idx)
                 events = np.frombuffer(data.raw_data, dtype=np.dtype([
                     ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool_)]))
@@ -765,27 +807,16 @@ class CarlaEnv(object):
                     self.dvs_data['events_tmp'].clear()
 
 
-            dvs_camera_bp = self.bp_lib.find('sensor.camera.dvs')
-            dvs_camera_bp.set_attribute('sensor_tick', f'{1 / self.max_fps}')
-            #         dvs_camera_bp.set_attribute('positive_threshold', str(0.3))
-            #         dvs_camera_bp.set_attribute('negative_threshold', str(0.3))
-            #         dvs_camera_bp.set_attribute('sigma_positive_threshold', str(0))
-            #         dvs_camera_bp.set_attribute('sigma_negative_threshold', str(0))
-            dvs_camera_bp.set_attribute('image_size_x', str(self.rl_image_size))
-            dvs_camera_bp.set_attribute('image_size_y', str(self.rl_image_size))
-            dvs_camera_bp.set_attribute('fov', str(self.fov))
-            dvs_camera_bp.set_attribute('enable_postprocess_effects', str(True))
-
             self.dvs_camera_left2 = self.world.spawn_actor(
-                dvs_camera_bp, carla.Transform(location, carla.Rotation(yaw=-float(self.fov) * 2)), attach_to=self.vehicle)
+                self.dvs_camera_bp, carla.Transform(location, carla.Rotation(yaw=-float(self.fov) * 2)), attach_to=self.vehicle)
             self.dvs_camera_left1 = self.world.spawn_actor(
-                dvs_camera_bp, carla.Transform(location, carla.Rotation(yaw=-float(self.fov) * 1)), attach_to=self.vehicle)
+                self.dvs_camera_bp, carla.Transform(location, carla.Rotation(yaw=-float(self.fov) * 1)), attach_to=self.vehicle)
             self.dvs_camera_mid = self.world.spawn_actor(
-                dvs_camera_bp, carla.Transform(location, carla.Rotation(yaw=0.0)), attach_to=self.vehicle)
+                self.dvs_camera_bp, carla.Transform(location, carla.Rotation(yaw=0.0)), attach_to=self.vehicle)
             self.dvs_camera_right1 = self.world.spawn_actor(
-                dvs_camera_bp, carla.Transform(location, carla.Rotation(yaw=float(self.fov) * 1)), attach_to=self.vehicle)
+                self.dvs_camera_bp, carla.Transform(location, carla.Rotation(yaw=float(self.fov) * 1)), attach_to=self.vehicle)
             self.dvs_camera_right2 = self.world.spawn_actor(
-                dvs_camera_bp, carla.Transform(location, carla.Rotation(yaw=float(self.fov) * 2)), attach_to=self.vehicle)
+                self.dvs_camera_bp, carla.Transform(location, carla.Rotation(yaw=float(self.fov) * 2)), attach_to=self.vehicle)
 
             for one_camera_idx, one_dvs_camera in enumerate([
                 self.dvs_camera_left2, self.dvs_camera_left1,
@@ -793,7 +824,7 @@ class CarlaEnv(object):
                 self.dvs_camera_right1, self.dvs_camera_right2
             ]):
                 #             print("listen dvs:", one_camera_idx)
-                one_dvs_camera.listen(lambda data, one_camera_idx=one_camera_idx: get_dvs_data(data, one_camera_idx))
+                one_dvs_camera.listen(lambda data, one_camera_idx=one_camera_idx: __get_dvs_data__(data, one_camera_idx))
 
             self.sensor_actors.append(self.dvs_camera_left2)
             self.sensor_actors.append(self.dvs_camera_left1)
@@ -804,7 +835,7 @@ class CarlaEnv(object):
         #         print("\t dvs sensors init done.")
         if self.perception_type.__contains__("vidar"):
 
-            def get_vidar_data(data, one_camera_idx):
+            def __get_vidar_data__(data, one_camera_idx):
                 array = np.frombuffer(data.raw_data, dtype=np.dtype("uint8"))
                 array = np.reshape(array, (data.height, data.width, 4))
                 array = array[:, :, :3]
@@ -831,26 +862,20 @@ class CarlaEnv(object):
                 self.vidar_data['img'][:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size, 1] = \
                     (self.vidar_data['spike'] * 255)[:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size].astype(np.uint8)
 
-            vidar_camera_bp = self.bp_lib.find('sensor.camera.rgb')
-            vidar_camera_bp.set_attribute('sensor_tick', f'{1 / self.max_fps}')
-            vidar_camera_bp.set_attribute('image_size_x', str(self.rl_image_size))
-            vidar_camera_bp.set_attribute('image_size_y', str(self.rl_image_size))
-            vidar_camera_bp.set_attribute('fov', str(self.fov))
-            vidar_camera_bp.set_attribute('enable_postprocess_effects', str(True))
 
             self.vidar_camera_left2 = self.world.spawn_actor(
-                vidar_camera_bp, carla.Transform(location, carla.Rotation(yaw=-float(self.fov) * 2)),
+                self.vidar_camera_bp, carla.Transform(location, carla.Rotation(yaw=-float(self.fov) * 2)),
                 attach_to=self.vehicle)
             self.vidar_camera_left1 = self.world.spawn_actor(
-                vidar_camera_bp, carla.Transform(location, carla.Rotation(yaw=-float(self.fov) * 1)),
+                self.vidar_camera_bp, carla.Transform(location, carla.Rotation(yaw=-float(self.fov) * 1)),
                 attach_to=self.vehicle)
             self.vidar_camera_mid = self.world.spawn_actor(
-                vidar_camera_bp, carla.Transform(location, carla.Rotation(yaw=0.0)), attach_to=self.vehicle)
+                self.vidar_camera_bp, carla.Transform(location, carla.Rotation(yaw=0.0)), attach_to=self.vehicle)
             self.vidar_camera_right1 = self.world.spawn_actor(
-                vidar_camera_bp, carla.Transform(location, carla.Rotation(yaw=float(self.fov) * 1)),
+                self.vidar_camera_bp, carla.Transform(location, carla.Rotation(yaw=float(self.fov) * 1)),
                 attach_to=self.vehicle)
             self.vidar_camera_right2 = self.world.spawn_actor(
-                vidar_camera_bp, carla.Transform(location, carla.Rotation(yaw=float(self.fov) * 2)),
+                self.vidar_camera_bp, carla.Transform(location, carla.Rotation(yaw=float(self.fov) * 2)),
                 attach_to=self.vehicle)
 
             for one_camera_idx, one_vidar_camera in enumerate([
@@ -859,7 +884,7 @@ class CarlaEnv(object):
                 self.vidar_camera_right1, self.vidar_camera_right2
             ]):
                 #             print("listen dvs:", one_camera_idx)
-                one_vidar_camera.listen(lambda data, one_camera_idx=one_camera_idx: get_vidar_data(data, one_camera_idx))
+                one_vidar_camera.listen(lambda data, one_camera_idx=one_camera_idx: __get_vidar_data__(data, one_camera_idx))
 
             self.sensor_actors.append(self.vidar_camera_left2)
             self.sensor_actors.append(self.vidar_camera_left1)
@@ -869,8 +894,8 @@ class CarlaEnv(object):
 
 
         # Collision Sensor
-        bp = self.bp_lib.find('sensor.other.collision')
-        self.collision_sensor = self.world.spawn_actor(bp, carla.Transform(), attach_to=self.vehicle)
+        self.collision_sensor = self.world.spawn_actor(
+            self.collision_bp, carla.Transform(), attach_to=self.vehicle)
         self.collision_sensor.listen(lambda event: self._on_collision(event))
         self._collision_intensities_during_last_time_step = []
 
