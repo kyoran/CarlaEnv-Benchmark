@@ -4,7 +4,6 @@ attrs==22.1.0
 backcall==0.2.0
 beautifulsoup4==4.11.1
 bleach==5.0.1
-carla==0.9.13
 certifi @ file:///opt/conda/conda-bld/certifi_1663615672595/work/certifi
 cffi==1.15.1
 cloudpickle==2.2.0
