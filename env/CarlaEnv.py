@@ -240,7 +240,7 @@ class CarlaEnv(object):
 
     def _clear_all_objects(self):
         # remove all vehicles, walkers, and sensors (in case they survived)
-        # self.world.tick()
+        self.world.tick()
 
         for one_sensor_actor in self.sensor_actors:
             if one_sensor_actor.is_alive:
