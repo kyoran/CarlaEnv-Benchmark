@@ -1,22 +1,25 @@
 # CarlaEnv-Benchmark
 
-An open source benchmark for (multi-task) reinforcement learning of autonomous vehicle.
+An open source benchmark for (multi-task) reinforcement learning of autonomous vehicles.
 
 
 ## Contents
 
+- Requirements
 - Installation
 - Usage
 - Citation
 - Acknowledgements
 
+## Requirements
+
+- **Carla**: 0.9.13
+- **Python**: 3.7+ or more
+
 ## Installation
 
-- Carla: 0.9.13
-- Python 3.6 or more
-- pip
-```
-pip install -r requirements.txt
+```python
+python setup.py
 ```
 
 ## Usage
@@ -26,6 +29,5 @@ pip install -r requirements.txt
 
 
 ## Acknowledgements
-
 
 The list of developers can be found [here](https://github.com/kyoran/CarlaEnv-Benchmark/graphs/contributors).
