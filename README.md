@@ -75,13 +75,14 @@ carla_env = CarlaEnv(
 video = VideoRecorder("./video", fps=30)
 ```
 
-- Now the simulation is running by using the following code, with numerous vehicles driving around the map, several pedestrians jaywalking, and a third-person-perspective camera recording data, and five first-person perspective perception data from the ego vehicle. This data can then be used to feed a machine learning algorithm for training an autonomous driving agent. The Traffic manager has many functions for customising traffic behaviourtesting and recording environment:
+- Now the simulation is running by using the following code, with numerous vehicles driving around the map, several pedestrians jaywalking, and a third-person-perspective camera recording data, and five first-person perspective perception data from the ego vehicle. This data can then be used to feed a machine learning algorithm for training an autonomous driving agent.
 ```
 obs = carla_env.reset()
 video.init(True)
 for one_step in range(400):
     action = [0, 0.7]
     obs, reward, done, info = carla_env.step(action)
+
     video.record(obs, carla_env.vehicle)
 video.save("test")
 ```

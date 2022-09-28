@@ -1,7 +1,7 @@
 {
-  "L1": {
+  "soft_high_light": {
     "__comment__": "normal sunny",
-    "cloudiness": 10,
+    "cloudiness": 50,
     "precipitation": 0,
     "precipitation_deposits": 0,
     "wind_intensity": 0,
@@ -11,14 +11,47 @@
     "sun_azimuth_angle": 0,
     "sun_altitude_angle": 90
   },
-  "L2": {
-    "__comment__": "rainy ↓ + deposit ↑ + (midday)"
+  "hard_high_light": {
+    "__comment__": "midday",
+    "cloudiness": 0,
+    "precipitation": 70,
+    "precipitation_deposits": 0,
+    "wind_intensity": 0,
+    "fog_density": 0,
+    "fog_distance": 0,
+    "wetness": 0,
+    "sun_azimuth_angle": 0,
+    "sun_altitude_angle": 90
   },
-  "L3": {
-    "__comment__": "foggy ↑ + dark ↑",
+  "soft_low_light": {
+    "__comment__": "soft foggy + midday",
+    "cloudiness": 50,
+    "precipitation": 0,
+    "precipitation_deposits": 0,
+    "wind_intensity": 0,
+    "fog_density": 50,
+    "fog_distance": 1000,
+    "wetness": 100,
+    "sun_azimuth_angle": 0,
+    "sun_altitude_angle": -90
+  },
+  "mid_low_light": {
+    "__comment__": "foggy + midday",
     "cloudiness": 100,
-    "precipitation": 100,
-    "precipitation_deposits": 100,
+    "precipitation": 0,
+    "precipitation_deposits": 0,
+    "wind_intensity": 0,
+    "fog_density": 100,
+    "fog_distance": 0,
+    "wetness": 100,
+    "sun_azimuth_angle": 0,
+    "sun_altitude_angle": 90
+  },
+  "hard_low_light": {
+    "__comment__": "foggy + midnight",
+    "cloudiness": 100,
+    "precipitation": 0,
+    "precipitation_deposits": 0,
     "wind_intensity": 0,
     "fog_density": 100,
     "fog_distance": 0,
@@ -26,22 +59,4 @@
     "sun_azimuth_angle": 0,
     "sun_altitude_angle": -90
   },
-  "L4": {
-    "__comment__": "foggy ↓ + dark ↓",
-    "cloudiness": 100,
-    "precipitation": 100,
-    "precipitation_deposits": 100,
-    "wind_intensity": 0,
-    "fog_density": 100,
-    "fog_distance": 0,
-    "wetness": 100,
-    "sun_azimuth_angle": 0,
-    "sun_altitude_angle": -90
-  },
-  "L5": {
-    "__comment__": "rainy ↑ + foggy ↑ + dark ↓"
-  },
-  "L6": {
-    "__comment__": "windy ↑ + storm"
-  }
 }

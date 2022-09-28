@@ -25,7 +25,7 @@ if __name__ == '__main__':
     carla_env = CarlaEnv(
         weather_params=weather_params,
         scenario_params=scenario_params,
-        selected_weather="L1",
+        selected_weather="soft_low_light",
         selected_scenario="jaywalk",
         carla_rpc_port=12321,
         carla_tm_port=18935,
