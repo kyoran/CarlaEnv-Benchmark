@@ -1,7 +1,7 @@
 {
-  "soft_high_light": {
-    "__comment__": "normal sunny",
-    "cloudiness": 50,
+  "hard_high_light": {
+    "__comment__": "midday",
+    "cloudiness": 0,
     "precipitation": 0,
     "precipitation_deposits": 0,
     "wind_intensity": 0,
@@ -11,17 +11,17 @@
     "sun_azimuth_angle": 0,
     "sun_altitude_angle": 90
   },
-  "hard_high_light": {
-    "__comment__": "midday",
-    "cloudiness": 0,
-    "precipitation": 70,
+  "soft_high_light": {
+    "__comment__": "normal sunny",
+    "cloudiness": 50,
+    "precipitation": 0,
     "precipitation_deposits": 0,
     "wind_intensity": 0,
-    "fog_density": 0,
+    "fog_density": 20,
     "fog_distance": 0,
     "wetness": 0,
     "sun_azimuth_angle": 0,
-    "sun_altitude_angle": 90
+    "sun_altitude_angle": 0
   },
   "soft_low_light": {
     "__comment__": "soft foggy + midday",
@@ -29,11 +29,11 @@
     "precipitation": 0,
     "precipitation_deposits": 0,
     "wind_intensity": 0,
-    "fog_density": 50,
-    "fog_distance": 1000,
-    "wetness": 100,
+    "fog_density": 30,
+    "fog_distance": 0,
+    "wetness": 0,
     "sun_azimuth_angle": 0,
-    "sun_altitude_angle": -90
+    "sun_altitude_angle": 90
   },
   "mid_low_light": {
     "__comment__": "foggy + midday",
@@ -41,11 +41,11 @@
     "precipitation": 0,
     "precipitation_deposits": 0,
     "wind_intensity": 0,
-    "fog_density": 100,
+    "fog_density": 80,
     "fog_distance": 0,
-    "wetness": 100,
+    "wetness": 0,
     "sun_azimuth_angle": 0,
-    "sun_altitude_angle": 90
+    "sun_altitude_angle": 20
   },
   "hard_low_light": {
     "__comment__": "foggy + midnight",
@@ -55,8 +55,8 @@
     "wind_intensity": 0,
     "fog_density": 100,
     "fog_distance": 0,
-    "wetness": 100,
+    "wetness": 0,
     "sun_azimuth_angle": 0,
     "sun_altitude_angle": -90
-  },
+  }
 }

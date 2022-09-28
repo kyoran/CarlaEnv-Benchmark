@@ -25,12 +25,12 @@ if __name__ == '__main__':
     carla_env = CarlaEnv(
         weather_params=weather_params,
         scenario_params=scenario_params,
-        selected_weather="soft_low_light",
+        selected_weather="hard_high_light",
         selected_scenario="jaywalk",
         carla_rpc_port=12321,
         carla_tm_port=18935,
         carla_timeout=8,
-        perception_type="rgb_frame",
+        perception_type="dvs+vidar",
         num_cameras=5,
         rl_image_size=128,
         fov=60,
@@ -57,7 +57,7 @@ if __name__ == '__main__':
             video.init(True) 
             for one_step in range(max_step_num):
 
-                if one_step <= 50:
+                if one_step <= max_step_num//2:
                     action = [0, 0.7]
                 else:
                     action = [0, -0.3]
