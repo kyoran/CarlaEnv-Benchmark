@@ -575,28 +575,30 @@ class CarlaEnv(object):
         ego_veh_params = self.scenario_params[self.selected_scenario]["ego_veh"]
 
         ego_spawn_times = 0
-        # max_ego_spawn_times = 20
+        max_ego_spawn_times = 5
 
         while True:
-            # print("ego_spawn_times:", ego_spawn_times)
-            # if ego_spawn_times > max_ego_spawn_times:
+            print("ego_spawn_times:", ego_spawn_times)
+            if ego_spawn_times > max_ego_spawn_times:
 
-            #     ego_spawn_times = 0
+                ego_spawn_times = 0
 
-            #     print("\tspawn ego vehicle times > max_ego_spawn_times")
-            #     # self.reset()
-            #     for one_vehicle_actor in self.vehicle_actors:
-            #         if one_vehicle_actor.is_alive:
-            #             one_vehicle_actor.destroy()
-            #     print("111")
-            #     self.reset_surrounding_vehicles()
-            #     print("333")
-            #     self.reset_special_vehicles()
-            #     print("444")
-            #     self.reset_walkers()
-            #     print("555")
+                print("\tspawn ego vehicle times > max_ego_spawn_times")
+                self._clear_all_actors()
+                print("111")
+                self.reset_surrounding_vehicles()
+                print("333")
+                self.reset_special_vehicles()
+                print("444")
+                self.reset_walkers()
+                print("555")
 
-            #     continue
+                self.vehicle_polygons = []
+                vehicle_poly_dict = self._get_actor_polygons('vehicle.*')
+                self.vehicle_polygons.append(vehicle_poly_dict)
+                print("666")
+
+                continue
 
             # Check if ego position overlaps with surrounding vehicles
             overlap = False

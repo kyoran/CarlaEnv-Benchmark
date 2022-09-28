@@ -22,7 +22,7 @@ if __name__ == '__main__':
     fps = 20
 
     # [2] creating env
-    seletcted_weather = "soft_high_light"
+    seletcted_weather = "hard_low_light"
     seletcted_scenario = "jaywalk"
 
     carla_env = CarlaEnv(
@@ -49,8 +49,8 @@ if __name__ == '__main__':
     video = VideoRecorder("./video", fps=fps)
 
     # [4] testing and recording env
-    max_episode_num = 2
-    max_step_num = 200
+    max_episode_num = 100
+    max_step_num = 100
 
     for one_episode in range(max_episode_num):
         
@@ -83,6 +83,6 @@ if __name__ == '__main__':
             print(e)
             
         video.save(f"{seletcted_scenario}-{seletcted_weather}:{one_episode+1}", type="mp4")
-        video.save(f"{seletcted_scenario}-{seletcted_weather}:{one_episode+1}", type="gif")
+        # video.save(f"{seletcted_scenario}-{seletcted_weather}:{one_episode+1}", type="gif")
 
         print(f"\nsave video done.\n")
