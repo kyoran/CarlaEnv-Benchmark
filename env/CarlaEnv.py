@@ -658,8 +658,8 @@ class CarlaEnv(object):
                     self.vehicle.apply_control(carla.VehicleControl(throttle=0, brake=1, manual_gear_shift=True, gear=1))
                 break
             else:
-                # ego_spawn_times += 1
-                time.sleep(0.1)
+                ego_spawn_times += 1
+                time.sleep(0.01)
                 # print("ego_spawn_times:", ego_spawn_times)
 
         self.world.tick()

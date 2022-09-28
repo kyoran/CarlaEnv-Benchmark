@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 from env.CarlaEnv import CarlaEnv
 from utils.VideoRecorder import VideoRecorder
 
+"""
+
+"""
 
 
 if __name__ == '__main__':
@@ -22,7 +25,7 @@ if __name__ == '__main__':
     fps = 20
 
     # [2] creating env
-    seletcted_weather = "hard_low_light"
+    seletcted_weather = "soft_low_light"
     seletcted_scenario = "jaywalk"
 
     carla_env = CarlaEnv(
@@ -49,13 +52,13 @@ if __name__ == '__main__':
     video = VideoRecorder("./video", fps=fps)
 
     # [4] testing and recording env
-    max_episode_num = 100
-    max_step_num = 100
+    max_episode_num = 1
+    max_step_num = 200
 
     for one_episode in range(max_episode_num):
         
         try:
-            obs = carla_env.reset(seed=19961110)
+            obs = carla_env.reset(seed=11101996)
 
             print("starting episode:", one_episode+1, "init-frame:", carla_env.frame)
 
