@@ -25,7 +25,7 @@ if __name__ == '__main__':
     fps = 20
 
     # [2] creating env
-    seletcted_weather = "soft_low_light"
+    seletcted_weather = "hard_noisy_low_light"
     seletcted_scenario = "jaywalk"
 
     carla_env = CarlaEnv(
