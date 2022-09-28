@@ -605,7 +605,7 @@ class CarlaEnv(object):
                 poly_center = np.mean(poly, axis=0)
                 ego_center = np.array([veh_start_pose.location.x, veh_start_pose.location.y])
                 dis = np.linalg.norm(poly_center - ego_center)
-                if dis > 5:
+                if dis > 8:
                     continue
                 else:
                     overlap = True

@@ -27,7 +27,7 @@ easy_install carla-0.9.13-py3.7-linux-x86_64.egg
 
 - Installing necessary packages:
 ```bash
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Usage
@@ -41,7 +41,7 @@ from env.CarlaEnv import CarlaEnv
 from utils.VideoRecorder import VideoRecorder
 ```
 
-- reading config files:
+- We also need to load config files:
 ```python
 with open('./cfg/weather.json', 'r', encoding='utf8') as fff:
     weather_params = json.load(fff)
@@ -49,7 +49,7 @@ with open('./cfg/scenario.json', 'r', encoding='utf8') as fff:
     scenario_params = json.load(fff)
 ```
 
-- creating a carla environment:
+- Then, we can create a carla environment with selected weather "L1" and selected scenario "jaywalk":
 ```python
 carla_env = CarlaEnv(
     weather_params=weather_params,
@@ -70,12 +70,12 @@ carla_env = CarlaEnv(
 )
 ```
 
-- creating a recorder:
+- To record what has happened in the process of simulation, we can create a recorder:
 ```python
 video = VideoRecorder("./video", fps=30)
 ```
 
-- testing and recording environment:
+- Now the simulation is running by using the following code, with numerous vehicles driving around the map, several pedestrians jaywalking, and a third-person-perspective camera recording data, and five first-person perspective perception data from the ego vehicle. This data can then be used to feed a machine learning algorithm for training an autonomous driving agent. The Traffic manager has many functions for customising traffic behaviourtesting and recording environment:
 ```
 obs = carla_env.reset()
 video.init(True)

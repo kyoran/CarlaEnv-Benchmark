@@ -30,7 +30,7 @@ if __name__ == '__main__':
         carla_rpc_port=12321,
         carla_tm_port=18935,
         carla_timeout=8,
-        perception_type="dvs_frame",
+        perception_type="rgb_frame",
         num_cameras=5,
         rl_image_size=128,
         fov=60,
@@ -63,6 +63,12 @@ if __name__ == '__main__':
                     action = [0, -0.3]
 
                 obs, reward, done, info = carla_env.step(action)
+                """
+                obs = {
+                    "video_frame": np.array(....),   # shape: 600, 800, 3
+                    "rgb_frame": np.array(....),     # shape: 128, 128*5, 3
+                }
+                """
 
                 video.record(obs, carla_env.vehicle)
 
