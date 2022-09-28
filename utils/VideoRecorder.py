@@ -67,19 +67,32 @@ class VideoRecorder(object):
             if "vidar_frame" in obs.keys():
                 self.vidar_frames.append(obs["vidar_frame"].copy())
 
-    def save(self, file_name):
+    def save(self, file_name, type="mp4"):
         if self.enabled:
-            video_frames_path = os.path.join(self.dir_name, file_name + "-video.mp4")
-            rgb_frames_path = os.path.join(self.dir_name, file_name + "-rgb.mp4")
-            dvs_frames_path = os.path.join(self.dir_name, file_name + "-dvs.mp4")
-            vidar_frames_path = os.path.join(self.dir_name, file_name + "-vidar.mp4")
+            video_frames_path = os.path.join(self.dir_name, file_name + f"-video.{type}")
+            rgb_frames_path = os.path.join(self.dir_name, file_name + f"-rgb.{type}")
+            dvs_frames_path = os.path.join(self.dir_name, file_name + f"-dvs.{type}")
+            vidar_frames_path = os.path.join(self.dir_name, file_name + f"-vidar.{type}")
             
             if len(self.video_frames) > 0:
-                imageio.mimsave(video_frames_path, self.video_frames, fps=self.fps, macro_block_size=2)
+                if type == "mp4":
+                    imageio.mimsave(video_frames_path, self.video_frames, fps=self.fps, macro_block_size=2)
+                elif type == "gif":
+                    imageio.mimsave(video_frames_path, self.video_frames, duration=1/self.fps)
+
             if len(self.rgb_frames) > 0:
-                imageio.mimsave(rgb_frames_path, self.rgb_frames, fps=self.fps, macro_block_size=2)
+                if type == "mp4":
+                    imageio.mimsave(rgb_frames_path, self.rgb_frames, fps=self.fps, macro_block_size=2)
+                elif type == "gif":
+                    imageio.mimsave(rgb_frames_path, self.rgb_frames, duration=1/self.fps)
             if len(self.dvs_frames) > 0:
-                imageio.mimsave(dvs_frames_path, self.dvs_frames, fps=self.fps, macro_block_size=2)            
+                if type == "mp4":
+                    imageio.mimsave(dvs_frames_path, self.dvs_frames, fps=self.fps, macro_block_size=2)
+                elif type == "gif":
+                    imageio.mimsave(dvs_frames_path, self.dvs_frames, duration=1/self.fps)         
             if len(self.vidar_frames) > 0:
-                imageio.mimsave(vidar_frames_path, self.vidar_frames, fps=self.fps, macro_block_size=2)    
+                if type == "mp4":
+                    imageio.mimsave(vidar_frames_path, self.vidar_frames, fps=self.fps, macro_block_size=2)
+                elif type == "gif":
+                    imageio.mimsave(vidar_frames_path, self.vidar_frames, duration=1/self.fps)   
             

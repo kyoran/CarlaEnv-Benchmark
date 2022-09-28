@@ -8,6 +8,7 @@ sudo docker run --privileged --user carla --gpus all --net=host -e DISPLAY=$DISP
 
 import carla
 
+import os
 import time
 import math
 import random
@@ -20,7 +21,8 @@ class CarlaEnv(object):
                  weather_params, scenario_params,
                  selected_weather, selected_scenario,
                  carla_rpc_port, carla_tm_port, carla_timeout,
-                 perception_type, num_cameras, rl_image_size, fov, max_fps, min_fps,
+                 ego_auto_pilot, perception_type, num_cameras, rl_image_size, fov,
+                 max_fps, min_fps,
                  max_episode_steps, frame_skip,
                  ):
 
@@ -31,6 +33,8 @@ class CarlaEnv(object):
         self.carla_timeout = carla_timeout
         self.weather_params = weather_params
         self.scenario_params = scenario_params
+
+        self.ego_auto_pilot = ego_auto_pilot
 
         # rgb-frame, dvs-frame, dvs-stream, dvs-vidar-stream
         self.perception_type = perception_type  # ↑↑↑↑↑↑↑↑↑
@@ -319,7 +323,15 @@ class CarlaEnv(object):
 
         self.world.tick()
 
-    def reset(self):
+    def _set_seed(self, seed):
+        if seed:
+            os.environ['PYTHONHASHSEED'] = str(seed)
+            np.random.seed(seed)
+            random.seed(seed)
+
+            self.tm.set_random_device_seed(seed)
+
+    def reset(self, seed=None):
 
         self._clear_all_actors()
 
@@ -347,6 +359,9 @@ class CarlaEnv(object):
             
             # lm
             self.lm = self.world.get_lightmanager()
+
+        # 
+        self._set_seed(seed)
 
         # reset
         self.reset_sync_mode(False)
@@ -620,32 +635,27 @@ class CarlaEnv(object):
 
             if self.vehicle is not None:
 
-                # immediate running
-                physics_control = self.vehicle.get_physics_control()
-                physics_control.gear_switch_time = 0.01
-                physics_control.damping_rate_zero_throttle_clutch_engaged=physics_control.damping_rate_zero_throttle_clutch_disengaged
-                self.vehicle.apply_physics_control(physics_control)
-                self.vehicle.apply_control(carla.VehicleControl(throttle=0, brake=1, manual_gear_shift=True, gear=1))
-
-                # velocity
-                self.tm.vehicle_percentage_speed_difference(self.vehicle, ego_veh_params["speed"])
-
                 self.vehicle_actors.append(self.vehicle)
 
                 # AUTO pilot
-                #                 vehicle.set_autopilot(True, tm_port)
-                #                 tm.ignore_lights_percentage(vehicle, 100)
-                #                 tm.ignore_signs_percentage(vehicle, 100)
+                if self.ego_auto_pilot:
+                    self.vehicle.set_autopilot(True, self.tm_port)
+                    self.vehicle.set_light_state(carla.VehicleLightState.HighBeam)
 
-                #                 self.vehicle.set_target_velocity(carla.Vector3D(0, 0, 0))
-                #                 self.vehicle.set_target_angular_velocity(carla.Vector3D(0, 0, 0))
-                # 0.9.9.4
-                #                 self.vehicle.set_velocity(carla.Vector3D(0, 0, 0))
-                #                 self.vehicle.set_angular_velocity(carla.Vector3D(0, 0, 0))
-                # self.vehicle.set_light_state(carla.libcarla.VehicleLightState.HighBeam)  # HighBeam # LowBeam  # All
+                    self.tm.auto_lane_change(self.vehicle, True)
+                    self.tm.vehicle_percentage_speed_difference(
+                        self.vehicle, ego_veh_params["speed"])
+                    self.tm.ignore_lights_percentage(self.vehicle, 100)
+                    self.tm.ignore_signs_percentage(self.vehicle, 100)
+                else:
+                    # immediate running
+                    physics_control = self.vehicle.get_physics_control()
+                    physics_control.gear_switch_time = 0.01
+                    physics_control.damping_rate_zero_throttle_clutch_engaged=physics_control.damping_rate_zero_throttle_clutch_disengaged
+                    self.vehicle.apply_physics_control(physics_control)
+                    self.vehicle.apply_control(carla.VehicleControl(throttle=0, brake=1, manual_gear_shift=True, gear=1))
                 break
             else:
-
                 # ego_spawn_times += 1
                 time.sleep(0.1)
                 # print("ego_spawn_times:", ego_spawn_times)
@@ -1050,29 +1060,3 @@ class CarlaEnv(object):
         time.sleep(0.5)
         print('done.')
 
-if __name__ == '__main__':
-    import json
-
-    # read config files
-    with open('../cfg/weather.json', 'r', encoding='utf8') as fff:
-        weather_params = json.load(fff)
-    with open('../cfg/scenario.json', 'r', encoding='utf8') as fff:
-        scenario_params = json.load(fff)
-
-    carla_env = CarlaEnv(
-        weather_params=weather_params,
-        scenario_params=scenario_params,
-        selected_weather="L1",
-        selected_scenario="tunnel",
-        carla_rpc_port=12321,
-        carla_tm_port=18935,
-        carla_timeout=8,
-        perception_type="dvs_frame",
-        num_cameras=5,
-        rl_image_size=84,
-        fov=60,
-        max_fps=120,
-        min_fps=45,
-        max_episode_steps=1000,
-        frame_skip=1,
-    )

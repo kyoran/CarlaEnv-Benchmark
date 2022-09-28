@@ -19,18 +19,23 @@ if __name__ == '__main__':
     with open('./cfg/scenario.json', 'r', encoding='utf8') as fff:
         scenario_params = json.load(fff)
 
-    fps = 30
+    fps = 20
 
     # [2] creating env
+    seletcted_weather = "soft_high_light"
+    seletcted_scenario = "jaywalk"
+
     carla_env = CarlaEnv(
         weather_params=weather_params,
         scenario_params=scenario_params,
-        selected_weather="hard_high_light",
-        selected_scenario="jaywalk",
+        selected_weather=seletcted_weather,
+        selected_scenario=seletcted_scenario,
         carla_rpc_port=12321,
         carla_tm_port=18935,
         carla_timeout=8,
-        perception_type="dvs+vidar",
+        ego_auto_pilot=True,
+        # perception_type="dvs+vidar",
+        perception_type="rgb",
         num_cameras=5,
         rl_image_size=128,
         fov=60,
@@ -44,25 +49,25 @@ if __name__ == '__main__':
     video = VideoRecorder("./video", fps=fps)
 
     # [4] testing and recording env
-    max_episode_num = 100
-    max_step_num = 100
+    max_episode_num = 2
+    max_step_num = 200
 
     for one_episode in range(max_episode_num):
         
         try:
-            obs = carla_env.reset()
+            obs = carla_env.reset(seed=19961110)
 
             print("starting episode:", one_episode+1, "init-frame:", carla_env.frame)
 
             video.init(True) 
             for one_step in range(max_step_num):
 
-                if one_step <= max_step_num//2:
-                    action = [0, 0.7]
-                else:
-                    action = [0, -0.3]
+                # if one_step <= max_step_num//2:
+                #     action = [0, 0.7]
+                # else:
+                #     action = [0, -0.3]
 
-                obs, reward, done, info = carla_env.step(action)
+                obs, reward, done, info = carla_env.step(action=None)
                 """
                 obs = {
                     "video_frame": np.array(....),   # shape: 600, 800, 3
@@ -77,5 +82,7 @@ if __name__ == '__main__':
         except Exception as e:
             print(e)
             
-        video.save(f"test-{one_episode+1}")
+        video.save(f"{seletcted_scenario}-{seletcted_weather}:{one_episode+1}", type="mp4")
+        video.save(f"{seletcted_scenario}-{seletcted_weather}:{one_episode+1}", type="gif")
+
         print(f"\nsave video done.\n")
