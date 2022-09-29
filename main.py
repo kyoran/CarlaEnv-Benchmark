@@ -22,7 +22,9 @@ if __name__ == '__main__':
     with open('./cfg/scenario.json', 'r', encoding='utf8') as fff:
         scenario_params = json.load(fff)
 
-    fps = 20
+    max_fps = 120
+    min_fps = 40
+
 
     # [2] creating env
     seletcted_weather = "hard_noisy_low_light"
@@ -37,28 +39,28 @@ if __name__ == '__main__':
         carla_tm_port=18935,
         carla_timeout=8,
         ego_auto_pilot=True,
-        # perception_type="dvs+vidar",
-        perception_type="rgb",
+        perception_type="dvs+vidar",
+        # perception_type="rgb",
         num_cameras=5,
-        rl_image_size=128,
+        rl_image_size=256,
         fov=60,
-        max_fps=fps,
-        min_fps=fps,
+        max_fps=max_fps,
+        min_fps=min_fps,
         max_episode_steps=1000,
         frame_skip=1,
     )
 
     # [3] creating recorder
-    video = VideoRecorder("./video", fps=fps)
+    video = VideoRecorder("./video", min_fps=min_fps, max_fps=max_fps)
 
     # [4] testing and recording env
     max_episode_num = 1
-    max_step_num = 200
+    max_step_num = 800
 
     for one_episode in range(max_episode_num):
         
         try:
-            obs = carla_env.reset(seed=11101996)
+            obs = carla_env.reset(seed=19961110)
 
             print("starting episode:", one_episode+1, "init-frame:", carla_env.frame)
 
