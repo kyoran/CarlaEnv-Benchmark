@@ -22,16 +22,29 @@ An open source benchmark for (multi-task) reinforcement learning of autonomous v
 
 ## Installation
 
+- Download the compiled release version and additional maps of CARLA 0.9.13 from [here](https://github.com/carla-simulator/carla/releases/tag/0.9.13) or using the following code:
+```shell
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/CARLA_0.9.13.tar.gz -o carla_0.9.13.tar.gz
+tar -zxvf carla_0.9.13.tar.gz
+
+cd carla_0.9.13/
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/AdditionalMaps_0.9.13.tar.gz
+tar -zxvf AdditionalMaps_0.9.13.tar.gz
+```
+
+
+- Installing the Python API of Carla:
+```bash
+cd carla_0.9.13/PythonAPI/carla/dist
+easy_install carla-0.9.13-py3.7-linux-x86_64.egg
+```
+
+
 - Download source code of `CarlaEnv-Benchmark`:
 ```bash
 git clone https://github.com/kyoran/CarlaEnv-Benchmark [repo-name]
 ```
 
-- Installing the Python API of Carla:
-```bash
-cd .../carla_root/PythonAPI/carla/dist
-easy_install carla-0.9.13-py3.7-linux-x86_64.egg
-```
 
 - Installing necessary packages:
 ```bash
@@ -40,7 +53,14 @@ pip install -r requirements.txt
 
 ## Usage
 
-- To manipulate the environment through the Python API, we first need to add the following code to the start of the script or the main function:
+- We first need to run the rendering engine CARLA server in the background:
+```shell
+cd carla_0.9.13/
+DISPLAY= ./CarlaUE4.sh -opengl -RenderOffScreen -world-port=12321
+```
+
+
+- To manipulate the environment through the Python API, we need to add the following code to the start of the script or the main function:
 ```python
 import json
 import matplotlib.pyplot as plt
@@ -115,12 +135,14 @@ If you use SpikingJelly in your work, please cite it as follows:
 }
 ```
 
+***Note***: To specify the version of `CarlaEnv-Benchmark` you are using, the default value `YYYY-MM-DD` in the note field should be replaced with the date of the last change of the framework you are using, i.e. the date of the latest commit.
+
 ## Acknowledgements
 Sun Yat-Sen University, Shanghai Jiao Tong University, Peking University, and Peng Cheng Laboratory are the main developers of `CarlaEnv-Benchmark`.
 
-![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png)
-![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.png)
-![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pku_logo.png)
-![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pcnl_logo.png)
+![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png =200x200)
+![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.png =200x200)
+![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pku_logo.png =200x200)
+![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pcnl_logo.png =200x200)
 
 The list of developers can be found [here](https://github.com/kyoran/CarlaEnv-Benchmark/graphs/contributors).
