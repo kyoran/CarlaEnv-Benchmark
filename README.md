@@ -142,7 +142,7 @@ Sun Yat-Sen University, Shanghai Jiao Tong University, Peking University, and Pe
 
 <center>
     <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png" width="80" height="80" alt="sysu" />
-    <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.jpeg" width="80" height="80" alt="sjtu" />
+    <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.png" width="80" height="80" alt="sjtu" />
     <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pku_logo.png" width="80" height="80" alt="pku" />
     <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pcnl_logo.png" width="80" height="80" alt="pcnl" />
 </center>
