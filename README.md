@@ -87,7 +87,6 @@ carla_env = CarlaEnv(
     carla_rpc_port=12321,
     carla_tm_port=18935,
     carla_timeout=8,
-    ego_auto_pilot=True,   # testing purpose
     perception_type="dvs+vidar",
     num_cameras=5,
     rl_image_size=256,
@@ -96,6 +95,8 @@ carla_env = CarlaEnv(
     min_fps=30,
     max_episode_steps=1000,
     frame_skip=1,
+    ego_auto_pilot=True,   # testing purpose
+    is_spectator=True,     # rendering mode
 )
 ```
 

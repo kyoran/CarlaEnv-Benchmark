@@ -247,14 +247,40 @@ class CarlaEnv(object):
                 # get location and velocity of the walker
                 loc_x, loc_y = walker.get_location().x, walker.get_location().y
                 vel_x, vel_y = walker.get_velocity().x, walker.get_velocity().y
-                ego_loc = np.array([loc_x, loc_y], dtype=np.float32)
-                
-                # judge whether the walker can cross the road
-                dis_gaps = np.linalg.norm(all_veh_locs - ego_loc, axis=1)
-                is_cross = (dis_gaps >= walker_behavior_params["secure_dis"]).all()
+                walker_loc = np.array([loc_x, loc_y], dtype=np.float32)
+
+                # judge whether walker can cross the road
+                dis_gaps = np.linalg.norm(all_veh_locs - walker_loc, axis=1)
+                cross_flag = (dis_gaps >= walker_behavior_params["secure_dis"]).all()
+                cross_prob = walker_behavior_params["cross_prob"]
 
                 if loc_y > walker_behavior_params["border"]["y"][1]:
-                    if self.time_step % self.max_fps != 0 or random.random() > walker_behavior_params["cross_prob"]:
+                    if self.time_step % self.max_fps == 0 and random.random() < cross_prob and cross_flag:
+                        walker.apply_control(self.left)
+                    else:
+                        if loc_x > walker_behavior_params["border"]["x"][1]:
+                            walker.apply_control(self.backward)
+
+                        elif loc_x > walker_behavior_params["border"]["x"][0]:
+                            if vel_x > 0:
+                                walker.apply_control(self.forward)
+                            else:
+                                walker.apply_control(self.backward)
+
+                        else:
+                            walker.apply_control(self.forward)
+                    
+                elif loc_y > walker_behavior_params["border"]["y"][0]:
+                    if vel_y > 0:
+                        walker.apply_control(self.right)
+                    else:
+                        walker.apply_control(self.left)
+                    
+                else:
+                    if self.time_step % self.max_fps == 0 and random.random() < cross_prob and cross_flag:
+                        walker.apply_control(self.right)
+
+                    else:
                         if loc_x > walker_behavior_params["border"]["x"][1]:
                             walker.apply_control(self.backward)
 
@@ -267,30 +293,6 @@ class CarlaEnv(object):
                         else:
                             walker.apply_control(self.forward)
 
-                    else:
-                        walker.apply_control(self.left) if is_cross else None
-
-                elif loc_y > walker_behavior_params["border"]["y"][0]:
-                    if vel_y > 0:
-                        walker.apply_control(self.right) if is_cross else None
-                    else:
-                        walker.apply_control(self.left) if is_cross else None
-
-                elif self.time_step % self.max_fps != 0 or random.random() > walker_behavior_params["cross_prob"]:
-                    if loc_x > walker_behavior_params["border"]["x"][1]:
-                        walker.apply_control(self.backward)
-
-                    elif loc_x > walker_behavior_params["border"]["x"][0]:
-                        if vel_x > 0:
-                            walker.apply_control(self.forward)
-                        else:
-                            walker.apply_control(self.backward)
-
-                    else:
-                        walker.apply_control(self.forward)
-
-                else:
-                    walker.apply_control(self.right) if is_cross else None
 
     def _clear_all_actors(self):
         # remove all vehicles, walkers, and sensors (in case they survived)
