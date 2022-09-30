@@ -21,9 +21,10 @@ class CarlaEnv(object):
                  weather_params, scenario_params,
                  selected_weather, selected_scenario,
                  carla_rpc_port, carla_tm_port, carla_timeout,
-                 ego_auto_pilot, perception_type, num_cameras, rl_image_size, fov,
+                 perception_type, num_cameras, rl_image_size, fov,
                  max_fps, min_fps,
                  max_episode_steps, frame_skip,
+                 is_spectator=False, ego_auto_pilot=False
                  ):
 
         self.frame_skip = frame_skip
@@ -34,7 +35,9 @@ class CarlaEnv(object):
         self.weather_params = weather_params
         self.scenario_params = scenario_params
 
+        # testing params
         self.ego_auto_pilot = ego_auto_pilot
+        self.is_spectator = is_spectator
 
         # rgb-frame, dvs-frame, dvs-stream, dvs-vidar-stream
         self.perception_type = perception_type  # ↑↑↑↑↑↑↑↑↑
@@ -103,7 +106,6 @@ class CarlaEnv(object):
         self.vidar_camera_bp.set_attribute('image_size_y', str(self.rl_image_size))
         self.vidar_camera_bp.set_attribute('fov', str(self.fov))
         self.vidar_camera_bp.set_attribute('enable_postprocess_effects', str(True))
-
 
     def _set_dummy_variables(self):
         # dummy variables given bisim's assumption on deep-mind-control suite APIs
@@ -235,10 +237,8 @@ class CarlaEnv(object):
 
         for walker in self.walker_actors:
             if walker.is_alive:
-                loc_x = walker.get_location().x
-                vel_x = walker.get_velocity().x
-                loc_y = walker.get_location().y
-                vel_y = walker.get_velocity().y
+                loc_x, loc_y = walker.get_location().x, walker.get_location().y
+                vel_x, vel_y = walker.get_velocity().x, walker.get_velocity().y
 
                 if loc_y > walker_behavior_params["border"]["y"][1]:
                     if self.time_step % self.max_fps != 0 or random.random() > walker_behavior_params["cross_prob"]:
@@ -351,6 +351,11 @@ class CarlaEnv(object):
             # bp
             self._init_blueprints()
 
+            # spectator
+            if self.is_spectator:
+                self.spectator = self.world.get_spectator()
+            else:
+                self.spectator = None
 
             # tm
             self.tm = self.client.get_trafficmanager(self.carla_tm_port)
@@ -376,6 +381,12 @@ class CarlaEnv(object):
 
         self.reset_sync_mode(True)
 
+        # spectator
+        # if self.spectator is not None:
+        #     self.spectator.set_transform(
+        #         carla.Transform(self.vehicle.get_transform().location + carla.Location(z=40),
+        #         carla.Rotation(pitch=-90)))
+
         self.time_step = 0
         self.dist_s = 0
         self.return_ = 0
@@ -400,13 +411,14 @@ class CarlaEnv(object):
         #         break
         # self.vehicle.set_autopilot(False, self.carla_tm_port)
 
-        obs, _, _, _ = self.step(None)
+        # obs, _, _, _ = self.step(None)
 
         print("carla env reset done.")
 
         self.reset_num += 1
 
-        return obs
+        # return obs
+        return None
 
     def reset_sync_mode(self, synchronous_mode=True):
 
@@ -489,21 +501,25 @@ class CarlaEnv(object):
         pass
 
     def reset_walkers(self):
-        walker_bp = self.world.get_blueprint_library().filter('walker.*')
+        walker_bp = self.bp_lib.filter('walker.*')
         total_surrounding_walker_num = 0
 
         walker_params = self.scenario_params[self.selected_scenario]["walker"]
         walker_behavior_params = self.scenario_params[self.selected_scenario]["walker_behavior"]
 
-        self.left = carla.WalkerControl(direction=carla.Vector3D(y=-1.),
-                                        speed=walker_behavior_params["speed"][1])
-        self.right = carla.WalkerControl(direction=carla.Vector3D(y=1.),
-                                         speed=walker_behavior_params["speed"][1])
+        self.left = carla.WalkerControl(
+            direction=carla.Vector3D(y=-1.),
+            speed=np.random.uniform(walker_behavior_params["speed"][0], walker_behavior_params["speed"][1]))
+        self.right = carla.WalkerControl(
+            direction=carla.Vector3D(y=1.),
+            speed=np.random.uniform(walker_behavior_params["speed"][0], walker_behavior_params["speed"][1]))
 
-        self.forward = carla.WalkerControl(direction=carla.Vector3D(x=1.),
-                                           speed=walker_behavior_params["speed"][0])
-        self.backward = carla.WalkerControl(direction=carla.Vector3D(x=-1.),
-                                            speed=walker_behavior_params["speed"][0])
+        self.forward = carla.WalkerControl(
+            direction=carla.Vector3D(x=1.),
+            speed=np.random.uniform(walker_behavior_params["speed"][0], walker_behavior_params["speed"][1]))
+        self.backward = carla.WalkerControl(
+            direction=carla.Vector3D(x=-1.),
+            speed=np.random.uniform(walker_behavior_params["speed"][0], walker_behavior_params["speed"][1]))
 
         for one_part in range(len(walker_params)):
 
@@ -975,6 +991,12 @@ class CarlaEnv(object):
         # Advance the simulation and wait for the data.
         #         self.dvs_data["events"] = None
         self.frame = self.world.tick()
+
+
+        # if self.spectator is not None:
+        #     self.spectator.set_transform(
+        #         carla.Transform(self.ego_vehicle.get_transform().location + carla.Location(z=40),
+        #         carla.Rotation(pitch=-90)))
 
         info = {}
         info['reason_episode_ended'] = ''
