@@ -42,7 +42,7 @@ easy_install carla-0.9.13-py3.7-linux-x86_64.egg
 
 - Download source code of `CarlaEnv-Benchmark`:
 ```bash
-git clone https://github.com/kyoran/CarlaEnv-Benchmark [repo-name]
+git clone https://github.com/kyoran/CarlaEnv-Benchmark
 ```
 
 
@@ -140,9 +140,11 @@ If you use SpikingJelly in your work, please cite it as follows:
 ## Acknowledgements
 Sun Yat-Sen University, Shanghai Jiao Tong University, Peking University, and Peng Cheng Laboratory are the main developers of `CarlaEnv-Benchmark`.
 
-<img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png" width="80" height="80" alt="sysu" />
-<img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.jpeg" width="80" height="80" alt="sjtu" />
-<img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pku_logo.png" width="80" height="80" alt="pku" />
-<img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pcnl_logo.png" width="80" height="80" alt="pcnl" />
+<center>
+    <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png" width="80" height="80" alt="sysu" />
+    <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.jpeg" width="80" height="80" alt="sjtu" />
+    <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pku_logo.png" width="80" height="80" alt="pku" />
+    <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pcnl_logo.png" width="80" height="80" alt="pcnl" />
+</center>
 
 The list of developers can be found [here](https://github.com/kyoran/CarlaEnv-Benchmark/graphs/contributors).
