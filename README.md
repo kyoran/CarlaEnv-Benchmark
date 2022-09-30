@@ -105,6 +105,7 @@ Finally, we can get recorded video in the 'video' directory.
 Publications using `CarlaEnv-Benchmark` are recorded in [Publications]. If you use [repo-name] in your paper, you can also add it to this table by pull request.
 
 If you use SpikingJelly in your work, please cite it as follows:
+```latex
 @misc{CarlaEnv-Benchmark,
     title = {CarlaEnv-Benchmark},
     author = {Xu, Haoran and Chen, Ding and other contributors},
@@ -112,14 +113,14 @@ If you use SpikingJelly in your work, please cite it as follows:
     howpublished = {\url{https://github.com/kyoran/CarlaEnv-Benchmark}},
     note = {Accessed: YYYY-MM-DD},
 }
-
+```
 
 ## Acknowledgements
 Sun Yat-Sen University, Shanghai Jiao Tong University, Peking University, and Peng Cheng Laboratory are the main developers of `CarlaEnv-Benchmark`.
 
-![avatar](./img/sysu_logo.png)
-![avatar](./img/sjtu_logo.png)
-![avatar](./img/pku_logo.png)
-![avatar](./img/pcnl_logo.png)
+![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png)
+![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.png)
+![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pku_logo.png)
+![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pcnl_logo.png)
 
 The list of developers can be found [here](https://github.com/kyoran/CarlaEnv-Benchmark/graphs/contributors).
