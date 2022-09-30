@@ -424,14 +424,13 @@ class CarlaEnv(object):
         #         break
         # self.vehicle.set_autopilot(False, self.carla_tm_port)
 
-        # obs, _, _, _ = self.step(None)
+        obs, _, _, _ = self.step(None)
 
         print("carla env reset done.")
 
         self.reset_num += 1
 
-        # return obs
-        return None
+        return obs
 
     def reset_sync_mode(self, synchronous_mode=True):
 
