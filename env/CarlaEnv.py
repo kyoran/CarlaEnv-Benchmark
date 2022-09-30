@@ -235,10 +235,22 @@ class CarlaEnv(object):
         #         walker.destroy()
         #         self.walker_actors.remove(walker)
 
+
+        all_veh_locs = [
+            [one_actor.get_transform().location.x, one_actor.get_transform().location.y] 
+            for one_actor in self.vehicle_actors
+        ]
+        all_veh_locs = np.array(all_veh_locs, dtype=np.float32)
+
         for walker in self.walker_actors:
             if walker.is_alive:
+                # get location and velocity of the walker
                 loc_x, loc_y = walker.get_location().x, walker.get_location().y
                 vel_x, vel_y = walker.get_velocity().x, walker.get_velocity().y
+
+                # judge whether the walker can cross the road
+                dis_gaps = np.linalg.norm(all_veh_locs - ego_loc, axis=1)
+                is_cross = (dis_gaps >= walker_behavior_params["secure_dis"]).all()
 
                 if loc_y > walker_behavior_params["border"]["y"][1]:
                     if self.time_step % self.max_fps != 0 or random.random() > walker_behavior_params["cross_prob"]:
@@ -255,13 +267,13 @@ class CarlaEnv(object):
                             walker.apply_control(self.forward)
 
                     else:
-                        walker.apply_control(self.left)
+                        walker.apply_control(self.left) if is_cross else None
 
                 elif loc_y > walker_behavior_params["border"]["y"][0]:
                     if vel_y > 0:
-                        walker.apply_control(self.right)
+                        walker.apply_control(self.right) if is_cross else None
                     else:
-                        walker.apply_control(self.left)
+                        walker.apply_control(self.left) if is_cross else None
 
                 elif self.time_step % self.max_fps != 0 or random.random() > walker_behavior_params["cross_prob"]:
                     if loc_x > walker_behavior_params["border"]["x"][1]:
@@ -277,7 +289,7 @@ class CarlaEnv(object):
                         walker.apply_control(self.forward)
 
                 else:
-                    walker.apply_control(self.right)
+                    walker.apply_control(self.right) if is_cross else None
 
     def _clear_all_actors(self):
         # remove all vehicles, walkers, and sensors (in case they survived)
