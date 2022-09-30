@@ -247,7 +247,8 @@ class CarlaEnv(object):
                 # get location and velocity of the walker
                 loc_x, loc_y = walker.get_location().x, walker.get_location().y
                 vel_x, vel_y = walker.get_velocity().x, walker.get_velocity().y
-
+                ego_loc = np.array([loc_x, loc_y], dtype=np.float32)
+                
                 # judge whether the walker can cross the road
                 dis_gaps = np.linalg.norm(all_veh_locs - ego_loc, axis=1)
                 is_cross = (dis_gaps >= walker_behavior_params["secure_dis"]).all()
