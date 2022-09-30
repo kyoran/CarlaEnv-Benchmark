@@ -140,9 +140,9 @@ If you use SpikingJelly in your work, please cite it as follows:
 ## Acknowledgements
 Sun Yat-Sen University, Shanghai Jiao Tong University, Peking University, and Peng Cheng Laboratory are the main developers of `CarlaEnv-Benchmark`.
 
-![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png =200x200)
-![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.png =200x200)
-![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pku_logo.png =200x200)
-![](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pcnl_logo.png =200x200)
+![sysu](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png){:height="200px" width="200px"}
+![sjtu](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.png){:height="200px" width="200px"}
+![pku](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pku_logo.png){:height="200px" width="200px"}
+![pcnl](https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pcnl_logo.png){:height="200px" width="200px"}
 
 The list of developers can be found [here](https://github.com/kyoran/CarlaEnv-Benchmark/graphs/contributors).
