@@ -1,5 +1,3 @@
-[repo-name]:CarlaEnv-Benchmark
-
 # CarlaEnv-Benchmark
 
 An open source benchmark for (multi-task) reinforcement learning of autonomous vehicles, and world modeling of intelligent transportation system, etc.
@@ -16,7 +14,7 @@ An open source benchmark for (multi-task) reinforcement learning of autonomous v
 
 ## Requirements
 
-[repo-name] is developed and tested under the following settings:
+`CarlaEnv-Benchmark` is developed and tested under the following settings:
 
 - **Ubuntu**: 18.04
 - **Carla**: 0.9.13
@@ -24,7 +22,7 @@ An open source benchmark for (multi-task) reinforcement learning of autonomous v
 
 ## Installation
 
-- Download source code of [repo-name]:
+- Download source code of `CarlaEnv-Benchmark`:
 ```bash
 git clone https://github.com/kyoran/CarlaEnv-Benchmark [repo-name]
 ```
@@ -42,7 +40,7 @@ pip install -r requirements.txt
 
 ## Usage
 
-- To manipulate Carla Environment through the Python API, we first need to add the following code to the start of the script or the main function:
+- To manipulate the environment through the Python API, we first need to add the following code to the start of the script or the main function:
 ```python
 import json
 import matplotlib.pyplot as plt
@@ -104,11 +102,11 @@ Finally, we can get recorded video in the 'video' directory.
 
 
 ## Citation
-Publications using [repo-name] are recorded in [Publications]. If you use [repo-name] in your paper, you can also add it to this table by pull request.
+Publications using `CarlaEnv-Benchmark` are recorded in [Publications]. If you use [repo-name] in your paper, you can also add it to this table by pull request.
 
 If you use SpikingJelly in your work, please cite it as follows:
-@misc{[repo-name],
-    title = {[repo-name]},
+@misc{CarlaEnv-Benchmark,
+    title = {CarlaEnv-Benchmark},
     author = {Xu, Haoran and Chen, Ding and other contributors},
     year = {2020},
     howpublished = {\url{https://github.com/kyoran/CarlaEnv-Benchmark}},
@@ -117,6 +115,11 @@ If you use SpikingJelly in your work, please cite it as follows:
 
 
 ## Acknowledgements
-Sun Yat-Sen University, Shanghai Jiao Tong University, and Peng Cheng Laboratory are the main developers of Carla-Benchmark.
+Sun Yat-Sen University, Shanghai Jiao Tong University, Peking University, and Peng Cheng Laboratory are the main developers of `CarlaEnv-Benchmark`.
+
+![avatar](./img/sysu_logo.png)
+![avatar](./img/sjtu_logo.png)
+![avatar](./img/pku_logo.png)
+![avatar](./img/pcnl_logo.png)
 
 The list of developers can be found [here](https://github.com/kyoran/CarlaEnv-Benchmark/graphs/contributors).
