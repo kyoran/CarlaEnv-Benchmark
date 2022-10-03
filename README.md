@@ -121,7 +121,7 @@ Finally, we can get recorded video in the 'video' directory.
 
 ## 4/Custom Settings
 
-### Scenario
+### 4.1/Scenario
 We provide five typical scenarios:
 - ***highway***
 - ***narrow***
@@ -129,7 +129,24 @@ We provide five typical scenarios:
 - ***tunnel*** 
 - ***merging***
 
-### Weather
+<table>
+    <tr>
+        <td>Scenario</td><td>Map</td><td>same_dir_veh</td><td>oppo_dir_veh</td><td>special_veh</td><td>walker</td><td>Description</td>
+    </tr>
+    <tr>
+        <td>***highway***</td><td>Town04</td>
+    </tr>
+</table>
+
+
+### 4.2/Weather
+We provide six typical scenarios:
+- ***hard_high_light***:
+- ***soft_high_light***:
+- ***soft_low_light***:
+- ***hard_low_light***:
+- ***soft_noisy_low_light***:
+- ***hard_noisy_low_light***:
 
 
 ## 5/Citation
