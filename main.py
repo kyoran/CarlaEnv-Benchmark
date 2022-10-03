@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
 
     # [2] creating env
-    seletcted_weather = "hard_noisy_low_light"
+    seletcted_weather = "soft_high_light"
     seletcted_scenario = "jaywalk"
 
     carla_env = CarlaEnv(
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     # [4] testing and recording env
     max_episode_num = 1
-    max_step_num = 800
+    max_step_num = 1800
 
     for one_episode in range(max_episode_num):
         

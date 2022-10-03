@@ -118,7 +118,7 @@ class CarlaEnv(object):
         self.observation_space = DotMap()
         # D, H, W
         if self.perception_type.__contains__("frame"):
-            self.observation_space.shape = (2, self.rl_image_size, self.num_cameras * self.rl_image_size)
+            self.observation_space.shape = (3, self.rl_image_size, self.num_cameras * self.rl_image_size)
             self.observation_space.dtype = np.dtype(np.uint8)
         elif self.perception_type.__contains__("stream"):
             self.observation_space.shape = (None, 4)
@@ -270,7 +270,7 @@ class CarlaEnv(object):
                         else:
                             walker.apply_control(self.forward)
                     
-                elif loc_y > walker_behavior_params["border"]["y"][0]:
+                elif loc_y > walker_behavior_params["border"]["y"][0] and cross_flag:
                     if vel_y > 0:
                         walker.apply_control(self.right)
                     else:

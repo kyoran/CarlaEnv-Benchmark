@@ -50,11 +50,11 @@ class VideoRecorder(object):
 
                     dw = width - 150
                     dh = 20
-                    draw.text((dw, dh), f"throttle: {control.throttle:.2f}", fill = (255, 255, 255))
-                    draw.text((dw, dh+20), f"steer: {control.steer:.2f}", fill = (255, 255, 255))
-                    draw.text((dw, dh+40), f"brake: {control.brake:.2f}", fill = (255, 255, 255))
-                    draw.text((dw, dh+60), f"vx: {velocity.x:.2f}", fill = (255, 255, 255))
-                    draw.text((dw, dh+80), f"vy: {velocity.y:.2f}", fill = (255, 255, 255))
+                    draw.text((dw, dh), f"throttle: {control.throttle:.5f}", fill = (255, 255, 255))
+                    draw.text((dw, dh+20), f"steer: {control.steer:.5f}", fill = (255, 255, 255))
+                    draw.text((dw, dh+40), f"brake: {control.brake:.5f}", fill = (255, 255, 255))
+                    draw.text((dw, dh+60), f"vx: {velocity.x:.5f}", fill = (255, 255, 255))
+                    draw.text((dw, dh+80), f"vy: {velocity.y:.5f}", fill = (255, 255, 255))
                     # video_frame.show()
                     video_frame = np.array(video_frame)
 
