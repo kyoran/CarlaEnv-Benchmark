@@ -5,14 +5,14 @@ An open source benchmark for (multi-task) reinforcement learning of autonomous v
 
 ## Contents
 
-- Requirements
-- Installation
-- Usage
-- Custom assets
-- Citation
-- Acknowledgements
+- 1. Requirements
+- 2. Installation
+- 3. Usage
+- 4. Custom Settings
+- 5. Citation
+- 6. Acknowledgements
 
-## Requirements
+## 1/Requirements
 
 `CarlaEnv-Benchmark` is developed and tested under the following settings:
 
@@ -20,7 +20,7 @@ An open source benchmark for (multi-task) reinforcement learning of autonomous v
 - **Carla**: 0.9.13
 - **Python**: 3.7.13
 
-## Installation
+## 2/Installation
 
 - Download the compiled release version and additional maps of CARLA 0.9.13 from [here](https://github.com/carla-simulator/carla/releases/tag/0.9.13) or using the following code:
 ```shell
@@ -51,7 +51,7 @@ git clone https://github.com/kyoran/CarlaEnv-Benchmark
 pip install -r requirements.txt
 ```
 
-## Usage
+## 3/Usage
 
 - We first need to run the rendering engine CARLA server in the background:
 ```shell
@@ -119,10 +119,20 @@ video.save("test")
 
 Finally, we can get recorded video in the 'video' directory.
 
-## Settings
+## 4/Custom Settings
+
+### Scenario
+We provide five typical scenarios:
+- ***highway***
+- ***narrow***
+- ***jaywalk***
+- ***tunnel*** 
+- ***merging***
+
+### Weather
 
 
-## Citation
+## 5/Citation
 Publications using `CarlaEnv-Benchmark` are recorded in [Publications]. If you use [repo-name] in your paper, you can also add it to this table by pull request.
 
 If you use SpikingJelly in your work, please cite it as follows:
@@ -138,16 +148,20 @@ If you use SpikingJelly in your work, please cite it as follows:
 
 ***Note***: To specify the version of `CarlaEnv-Benchmark` you are using, the default value `YYYY-MM-DD` in the note field should be replaced with the date of the last change of the framework you are using, i.e. the date of the latest commit.
 
-## Acknowledgements
+## 6/Acknowledgements
 Sun Yat-Sen University, Shanghai Jiao Tong University, Peking University, and Peng Cheng Laboratory are the main developers of `CarlaEnv-Benchmark`.
 
-<figure>
-<center>
-    <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png" width="80" height="80" alt="sysu" />
-    <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.png" width="80" height="80" alt="sjtu" />
-    <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pku_logo.png" width="80" height="80" alt="pku" />
-    <img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pcnl_logo.png" width="80" height="80" alt="pcnl" />
-</center>
-</figure>
+
+<div align="center">
+<table>
+    <tr>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png" width="80" height="80" alt="sysu" /></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.png" width="80" height="80" alt="sjtu" /></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pku_logo.png" width="80" height="80" alt="pku" /></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pcnl_logo.png" width="80" height="80" alt="pcnl" /></td>
+    </tr>
+</table>
+</div>
+
 
 The list of developers can be found [here](https://github.com/kyoran/CarlaEnv-Benchmark/graphs/contributors).
