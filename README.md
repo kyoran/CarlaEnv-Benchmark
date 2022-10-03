@@ -140,7 +140,7 @@ We provide five typical scenarios:
         <td>narrow</td><td>Town07</td>
     </tr>
     <tr>
-        <td>jaywalk</td><td>Town01</td><td>2</td><td>4</td><td>15</td><td>pedestrians on both sides of the two-lane road jaywalk</td>
+        <td>jaywalk</td><td>Town01</td><td>2</td><td>4</td><td>0</td><td>15</td><td>pedestrians on both sides of the two-lane road jaywalk</td>
     </tr>
     <tr>
         <td>tunnel</td><td>Town03</td>
