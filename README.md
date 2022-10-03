@@ -134,7 +134,19 @@ We provide five typical scenarios:
         <td>Scenario</td><td>Map</td><td>same_dir_veh</td><td>oppo_dir_veh</td><td>special_veh</td><td>walker</td><td>Description</td>
     </tr>
     <tr>
-        <td>***highway***</td><td>Town04</td>
+        <td>highway</td><td>Town04</td>
+    </tr>
+    <tr>
+        <td>narrow</td><td>Town07</td>
+    </tr>
+    <tr>
+        <td>jaywalk</td><td>Town01</td><td>2</td><td>4</td><td>15</td><td>pedestrians on both sides of the two-lane road jaywalk</td>
+    </tr>
+    <tr>
+        <td>tunnel</td><td>Town03</td>
+    </tr>
+    <tr>
+        <td>merging</td><td></td>
     </tr>
 </table>
 
