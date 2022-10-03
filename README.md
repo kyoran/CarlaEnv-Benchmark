@@ -5,12 +5,12 @@ An open source benchmark for (multi-task) reinforcement learning of autonomous v
 
 ## Contents
 
-- 1. Requirements
-- 2. Installation
-- 3. Usage
-- 4. Custom Settings
-- 5. Citation
-- 6. Acknowledgements
+1. Requirements
+2. Installation
+3. Usage
+4. Custom Settings
+5. Citation
+6. Acknowledgements
 
 ## 1/Requirements
 
