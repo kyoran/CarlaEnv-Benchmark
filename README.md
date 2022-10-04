@@ -2,6 +2,18 @@
 
 An open source benchmark for (multi-task) reinforcement learning of autonomous vehicles, and world modeling of intelligent transportation system, etc.
 
+<table>
+    <tr>
+        <td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+</table>    
+
 
 ## Contents
 
@@ -24,10 +36,11 @@ An open source benchmark for (multi-task) reinforcement learning of autonomous v
 
 - Download the compiled release version and additional maps of CARLA 0.9.13 from [here](https://github.com/carla-simulator/carla/releases/tag/0.9.13) or using the following code:
 ```shell
-wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/CARLA_0.9.13.tar.gz -o carla_0.9.13.tar.gz
-tar -zxvf carla_0.9.13.tar.gz
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/CARLA_0.9.13.tar.gz
+mkdir CARLA_0.9.13
+tar -zxvf CARLA_0.9.13.tar.gz -C CARLA_0.9.13
 
-cd carla_0.9.13/
+cd CARLA_0.9.13/
 wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/AdditionalMaps_0.9.13.tar.gz
 tar -zxvf AdditionalMaps_0.9.13.tar.gz
 ```
@@ -121,44 +134,26 @@ Finally, we can get recorded video in the 'video' directory.
 
 ## 4/Custom Settings
 
+
+We provide five scenarios and six weathers:
+
 ### 4.1/Scenario
-We provide five typical scenarios:
+
 - ***highway***
 - ***narrow***
 - ***jaywalk***
 - ***tunnel*** 
 - ***merging***
 
-<table>
-    <tr>
-        <td>Scenario</td><td>Map</td><td>same_dir_veh</td><td>oppo_dir_veh</td><td>special_veh</td><td>walker</td><td>Description</td>
-    </tr>
-    <tr>
-        <td>highway</td><td>Town04</td>
-    </tr>
-    <tr>
-        <td>narrow</td><td>Town07</td>
-    </tr>
-    <tr>
-        <td>jaywalk</td><td>Town01</td><td>2</td><td>4</td><td>0</td><td>15</td><td>pedestrians on both sides of the two-lane road jaywalk</td>
-    </tr>
-    <tr>
-        <td>tunnel</td><td>Town03</td>
-    </tr>
-    <tr>
-        <td>merging</td><td></td>
-    </tr>
-</table>
-
 
 ### 4.2/Weather
-We provide six typical scenarios:
-- ***hard_high_light***:
-- ***soft_high_light***:
-- ***soft_low_light***:
-- ***hard_low_light***:
-- ***soft_noisy_low_light***:
-- ***hard_noisy_low_light***:
+
+- ***hard_high_light***
+- ***soft_high_light***
+- ***soft_low_light***
+- ***hard_low_light***
+- ***soft_noisy_low_light***
+- ***hard_noisy_low_light***
 
 
 ## 5/Citation
@@ -182,7 +177,7 @@ Sun Yat-Sen University, Shanghai Jiao Tong University, Peking University, and Pe
 
 
 <div align="center">
-<table>
+<table border="0">
     <tr>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png" width="80" height="80" alt="sysu" /></td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.png" width="80" height="80" alt="sjtu" /></td>
