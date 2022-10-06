@@ -1,19 +1,19 @@
 import torch
-from utils.loading_utils import load_model, get_device
+from e2vid_utils.loading_utils import load_model, get_device
 import numpy as np
 import argparse
 import pandas as pd
 import time
 
-from utils.event_readers import FixedSizeEventReader, FixedDurationEventReader
-from utils.inference_utils import events_to_voxel_grid, events_to_voxel_grid_pytorch
-from utils.timers import Timer
+from e2vid_utils.event_readers import FixedSizeEventReader, FixedDurationEventReader
+from e2vid_utils.inference_utils import events_to_voxel_grid, events_to_voxel_grid_pytorch
+from e2vid_utils.timers import Timer
 from image_reconstructor import ImageReconstructor
 from options.inference_options import set_inference_options
 
 
 
-def run_dvs_rec(event_window, args):
+def run_dvs_rec(event_window, rec_model, device, args):
 
     """
     path_to_model = "./tools/rpg_e2vid/pretrained/E2VID_lightweight.path.tar"
@@ -47,24 +47,20 @@ def run_dvs_rec(event_window, args):
     no_recurrent = False
     """
 
-    # Load model
-    model = load_model(args.path_to_model)
-    device = get_device(args.use_gpu)
+    width = args.rl_image_size * args.num_cameras
+    height = args.rl_image_size
 
-    model = model.to(device)
-    model.eval()
-
-    reconstructor = ImageReconstructor(model, height, width, model.num_bins, args)
+    reconstructor = ImageReconstructor(rec_model, height, width, rec_model.num_bins, args)
 
     """ Read chunks of events using Pandas """
-
-    # reconstruct image
     event_tensor = events_to_voxel_grid_pytorch(event_window,
-                                                num_bins=model.num_bins,  # 5
-                                                width=args.width,
-                                                height=args.height,
+                                                num_bins=rec_model.num_bins,  # 5
+                                                width=width,
+                                                height=height,
                                                 device=device)
 
     num_events_in_window = event_window.shape[0]
-    reconstructor.update_reconstruction(event_tensor)
+    # print("num_events_in_window:", num_events_in_window)
+    out = reconstructor.update_reconstruction(event_tensor)
+    return out
 

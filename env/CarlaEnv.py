@@ -56,10 +56,20 @@ class CarlaEnv(object):
         self.perception_type = perception_type  # ↑↑↑↑↑↑↑↑↑
         if self.perception_type == "dvs-rec-frame":
             assert dvs_rec_args, "missing necessary param: [dvs_rec_args]"
-            
-            sys.path.append("./tools/rpg_e2vid")
-            from tools.rpg_e2vid.run_dvs_rec import run_dvs_rec
+
             self.dvs_rec_args = dvs_rec_args
+
+            sys.path.append("./tools/rpg_e2vid")
+            # from tools.rpg_e2vid.run_dvs_rec import run_dvs_rec
+            # from run_dvs_rec import run_dvs_rec
+            # from tools.rpg_e2vid.e2vid_utils.loading_utils import load_model, get_device
+            from e2vid_utils.loading_utils import load_model, get_device
+
+            # Load model
+            self.rec_model = load_model(self.dvs_rec_args.path_to_model)
+            self.device = get_device(self.dvs_rec_args.use_gpu)
+            self.rec_model = self.rec_model.to(self.device)
+            self.rec_model .eval()
 
         elif self.perception_type == "vidar-rec-frame":
             sys.path.append("./tools/xxxxx")
@@ -135,7 +145,10 @@ class CarlaEnv(object):
         if self.perception_type.__contains__("frame"):
             self.observation_space.shape = (3, self.rl_image_size, self.num_cameras * self.rl_image_size)
             self.observation_space.dtype = np.dtype(np.uint8)
-        elif self.perception_type.__contains__("stream"):
+        if self.perception_type.__contains__("rec"):
+            self.observation_space.shape = (1, self.rl_image_size, self.num_cameras * self.rl_image_size)
+            self.observation_space.dtype = np.dtype(np.uint8)
+        if self.perception_type.__contains__("stream"):
             self.observation_space.shape = (None, 4)
             self.observation_space.dtype = np.dtype(np.float32)
         self.reward_range = None
@@ -310,7 +323,7 @@ class CarlaEnv(object):
 
     def _clear_all_actors(self):
         # remove all vehicles, walkers, and sensors (in case they survived)
-        self.world.tick()
+        # self.world.tick()
 
         if 'vehicle' in dir(self) and self.vehicle is not None:
             for one_sensor_actor in self.sensor_actors:
@@ -350,8 +363,8 @@ class CarlaEnv(object):
         self.walker_actors = []
         self.walker_ai_actors = []
 
-        self.world.tick()
-        self.client.reload_world(reset_settings=True)
+        # self.world.tick()
+        # self.client.reload_world(reset_settings=True)
 
     def _set_seed(self, seed):
         if seed:
@@ -721,12 +734,16 @@ class CarlaEnv(object):
         if self.perception_type.__contains__("dvs"):
             self.dvs_data = {'frame': [0] * self.num_cameras, 'timestamp': [0.0] * self.num_cameras, 'events': None,
                              'events_tmp': [],
-                             'img': np.zeros((self.rl_image_size, self.rl_image_size * self.num_cameras, 3), dtype=np.uint8)}
+                             'img': np.zeros((self.rl_image_size, self.rl_image_size * self.num_cameras, 3), dtype=np.uint8),
+                             'rec-img': np.zeros((self.rl_image_size, self.rl_image_size * self.num_cameras, 1), dtype=np.uint8),
+                             }
         if self.perception_type.__contains__("vidar"):
             self.vidar_data = {'frame': [0] * self.num_cameras, 'timestamp': [0.0] * self.num_cameras,
                                'voltage': np.zeros((self.rl_image_size, self.rl_image_size*self.num_cameras), dtype=np.uint16),
                                'spike': np.zeros((self.rl_image_size, self.rl_image_size*self.num_cameras), dtype=np.bool_),
-                               'img': np.zeros((self.rl_image_size, self.rl_image_size*self.num_cameras, 3), dtype=np.uint8)}
+                               'img': np.zeros((self.rl_image_size, self.rl_image_size*self.num_cameras, 3), dtype=np.uint8),
+                               'rec-img': np.zeros((self.rl_image_size, self.rl_image_size * self.num_cameras, 1), dtype=np.uint8),
+                               }
 
         self.frame = None
 
@@ -827,6 +844,17 @@ class CarlaEnv(object):
 
                     self.dvs_data['events'] = np.concatenate(self.dvs_data["events_tmp"], axis=0)
                     self.dvs_data['events'] = self.dvs_data['events'][np.argsort(self.dvs_data['events'][:, -1])]
+
+                    # rec
+                    if self.perception_type.__contains__("dvs") and self.perception_type.__contains__("rec"):
+                        from run_dvs_rec import run_dvs_rec
+                        out = run_dvs_rec(
+                            # x, y, p, t -> t, x, y, p
+                            self.dvs_data['events'][:, [3, 0, 1, 2]],
+                            self.rec_model, self.device, self.dvs_rec_args)
+                        # print(out.shape, out.dtype)
+                        # print(out[:5, :5])
+                        self.dvs_data['rec-img'][:, :, 0] = out
 
                     # init start, x, y, p, t
                     # (event_num, 4)
@@ -986,13 +1014,14 @@ class CarlaEnv(object):
         next_obs, done, info = None, None, None
 
         for _ in range(self.frame_skip):  # default 1
-            next_obs, reward, done, info = self._simulator_step(action, self.delta_seconds)
+            # next_obs, reward, done, info = self._simulator_step(action, self.delta_seconds)
+            next_obs, reward, done, info = self._simulator_step(action)
             rewards.append(reward)
             if done:
                 break
         return next_obs, np.mean(rewards), done, info  # just last info?
 
-    def _simulator_step(self, action, dt):
+    def _simulator_step(self, action, dt=0.05):
 
         if action is not None:
             steer = float(action[0])
@@ -1050,9 +1079,9 @@ class CarlaEnv(object):
         #         reward = vel_s * dt / (1. + dist_from_center) - 1.0 * colliding - 0.1 * brake - 0.1 * abs(steer)
 
         collision_cost = 0.001 * collision_intensities_during_last_time_step
-        reward = 100 * vel_s * dt - collision_cost - abs(steer)
+        reward = vel_s * dt - collision_cost - abs(steer)
 
-        self.dist_s += vel_s * dt
+        self.dist_s += vel_s * self.delta_seconds
         self.return_ += reward
 
         self.time_step += 1
@@ -1067,9 +1096,22 @@ class CarlaEnv(object):
                 'dvs_frame': self.dvs_data['img'],
                 'dvs_events': self.dvs_data['events']
             })
-        if self.perception_type.__contains__("vidar"):
+            if self.perception_type.__contains__("rec"):
+                next_obs.update({
+                    'dvs_rec_img': self.dvs_data['rec-img'],
+                    'perception': self.dvs_data['rec-img']
+                })
+            elif self.perception_type.__contains__("stream"):
+                next_obs.update({
+                    'perception': self.dvs_data['events']
+                })
+        elif self.perception_type.__contains__("vidar"):
             next_obs.update({
                 'vidar_frame': self.vidar_data['img']
+            })
+        elif self.perception_type.__contains__("rgb"):
+            next_obs.update({
+                'perception': self.rgb_data['img']
             })
 
         info['crash_intensity'] = collision_intensities_during_last_time_step

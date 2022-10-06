@@ -2,10 +2,10 @@ import torch
 import cv2
 import numpy as np
 from model.model import *
-from utils.inference_utils import CropParameters, EventPreprocessor, IntensityRescaler, ImageFilter, ImageDisplay, ImageWriter, UnsharpMaskFilter
-from utils.inference_utils import upsample_color_image, merge_channels_into_color_image  # for color reconstruction
-from utils.util import robust_min, robust_max
-from utils.timers import CudaTimer, cuda_timers
+from e2vid_utils.inference_utils import CropParameters, EventPreprocessor, IntensityRescaler, ImageFilter, ImageDisplay, ImageWriter, UnsharpMaskFilter
+from e2vid_utils.inference_utils import upsample_color_image, merge_channels_into_color_image  # for color reconstruction
+from e2vid_utils.util import robust_min, robust_max
+from e2vid_utils.timers import CudaTimer, cuda_timers
 from os.path import join
 from collections import deque
 import torch.nn.functional as F
@@ -24,12 +24,12 @@ class ImageReconstructor:
         self.initialize(self.height, self.width, options)
 
     def initialize(self, height, width, options):
-        print('== Image reconstruction == ')
-        print('Image size: {}x{}'.format(self.height, self.width))
+        # print('== Image reconstruction == ')
+        # print('Image size: {}x{}'.format(self.height, self.width))
 
         self.no_recurrent = options.no_recurrent
-        if self.no_recurrent:
-            print('!!Recurrent connection disabled!!')
+        # if self.no_recurrent:
+        #     print('!!Recurrent connection disabled!!')
 
         self.perform_color_reconstruction = options.color  # whether to perform color reconstruction (only use this with the DAVIS346color)
         if self.perform_color_reconstruction:
@@ -51,10 +51,10 @@ class ImageReconstructor:
         self.intensity_rescaler = IntensityRescaler(options)
         self.image_filter = ImageFilter(options)
         self.unsharp_mask_filter = UnsharpMaskFilter(options, device=self.device)
-        self.image_writer = ImageWriter(options)
-        self.image_display = ImageDisplay(options)
+        # self.image_writer = ImageWriter(options)
+        # self.image_display = ImageDisplay(options)
 
-    def update_reconstruction(self, event_tensor, event_tensor_id, stamp=None):
+    def update_reconstruction(self, event_tensor, event_tensor_id=None, stamp=None):
         with torch.no_grad():
 
             with CudaTimer('Reconstruction'):
@@ -105,6 +105,6 @@ class ImageReconstructor:
 
             # Post-processing, e.g bilateral filter (on CPU)
             out = self.image_filter(out)
-
-            self.image_writer(out, event_tensor_id, stamp, events=events)
-            self.image_display(out, events)
+            return out
+            # self.image_writer(out, event_tensor_id, stamp, events=events)
+            # self.image_display(out, events)
