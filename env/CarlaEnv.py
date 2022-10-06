@@ -9,11 +9,13 @@ sudo docker run --privileged --user carla --gpus all --net=host -e DISPLAY=$DISP
 import carla
 
 import os
+import sys
 import time
 import math
 import random
 import numpy as np
 from dotmap import DotMap
+
 
 class CarlaEnv(object):
 
@@ -24,7 +26,8 @@ class CarlaEnv(object):
                  perception_type, num_cameras, rl_image_size, fov,
                  max_fps, min_fps,
                  max_episode_steps, frame_skip,
-                 is_spectator=False, ego_auto_pilot=False
+                 is_spectator=False, ego_auto_pilot=False,
+                 dvs_rec_args=None,
                  ):
 
         self.frame_skip = frame_skip
@@ -39,8 +42,6 @@ class CarlaEnv(object):
         self.ego_auto_pilot = ego_auto_pilot
         self.is_spectator = is_spectator
 
-        # rgb-frame, dvs-frame, dvs-stream, dvs-vidar-stream
-        self.perception_type = perception_type  # ↑↑↑↑↑↑↑↑↑
         self.num_cameras = num_cameras
         self.rl_image_size = rl_image_size
         self.fov = fov
@@ -50,6 +51,20 @@ class CarlaEnv(object):
 
         self.selected_weather = selected_weather
         self.selected_scenario = selected_scenario
+
+        # rgb-frame, dvs-rec-frame, dvs-stream, dvs-vidar-stream
+        self.perception_type = perception_type  # ↑↑↑↑↑↑↑↑↑
+        if self.perception_type == "dvs-rec-frame":
+            assert dvs_rec_args, "missing necessary param: [dvs_rec_args]"
+            
+            sys.path.append("./tools/rpg_e2vid")
+            from tools.rpg_e2vid.run_dvs_rec import run_dvs_rec
+            self.dvs_rec_args = dvs_rec_args
+
+        elif self.perception_type == "vidar-rec-frame":
+            sys.path.append("./tools/xxxxx")
+            from xxxx import xxxx
+
 
         # client init
         self.client = carla.Client('localhost', self.carla_rpc_port)
@@ -293,7 +308,6 @@ class CarlaEnv(object):
                         else:
                             walker.apply_control(self.forward)
 
-
     def _clear_all_actors(self):
         # remove all vehicles, walkers, and sensors (in case they survived)
         self.world.tick()
@@ -337,6 +351,7 @@ class CarlaEnv(object):
         self.walker_ai_actors = []
 
         self.world.tick()
+        self.client.reload_world(reset_settings=True)
 
     def _set_seed(self, seed):
         if seed:
@@ -350,12 +365,16 @@ class CarlaEnv(object):
 
         self._clear_all_actors()
 
+        # self.client.reload_world(reset_settings = True)
+
         if self.reset_num == 0:
 
             self._set_dummy_variables()
 
-            # self.client.reload_world(reset_settings=True)
-            self.world = self.client.load_world(self.scenario_params[self.selected_scenario]["map"])
+            # self.world = self.client.load_world(
+            #     map_name = self.scenario_params[self.selected_scenario]["map"],
+            #     reset_settings = False
+            # )
 
             # remove dynamic objects to prevent 'tables' and 'chairs' flying in the sky
             env_objs = self.world.get_environment_objects(carla.CityObjectLabel.Dynamic)
@@ -1031,7 +1050,7 @@ class CarlaEnv(object):
         #         reward = vel_s * dt / (1. + dist_from_center) - 1.0 * colliding - 0.1 * brake - 0.1 * abs(steer)
 
         collision_cost = 0.001 * collision_intensities_during_last_time_step
-        reward = vel_s * dt - collision_cost - abs(steer)
+        reward = 100 * vel_s * dt - collision_cost - abs(steer)
 
         self.dist_s += vel_s * dt
         self.return_ += reward
