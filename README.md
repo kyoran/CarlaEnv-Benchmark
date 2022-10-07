@@ -1,179 +1,191 @@
-# High Speed and High Dynamic Range Video with an Event Camera
+# CarlaEnv-Benchmark
 
-[![High Speed and High Dynamic Range Video with an Event Camera](http://rpg.ifi.uzh.ch/E2VID/video_thumbnail.png)](https://youtu.be/eomALySSGVU)
+An open source benchmark for representation learning for event-based retinomorphic policy, (multi-task) reinforcement learning of autonomous vehicles, and world modeling of intelligent transportation system, etc.
 
-This is the code for the paper **High Speed and High Dynamic Range Video with an Event Camera** by [Henri Rebecq](http://henri.rebecq.fr), Rene Ranftl, [Vladlen Koltun](http://vladlen.info/) and [Davide Scaramuzza](http://rpg.ifi.uzh.ch/people_scaramuzza.html):
+<table>
+    <tr>
+        <td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+</table>    
 
-You can find a pdf of the paper [here](http://rpg.ifi.uzh.ch/docs/TPAMI19_Rebecq.pdf).
-If you use any of this code, please cite the following publications:
 
-```bibtex
-@Article{Rebecq19pami,
-  author        = {Henri Rebecq and Ren{\'{e}} Ranftl and Vladlen Koltun and Davide Scaramuzza},
-  title         = {High Speed and High Dynamic Range Video with an Event Camera},
-  journal       = {{IEEE} Trans. Pattern Anal. Mach. Intell. (T-PAMI)},
-  url           = {http://rpg.ifi.uzh.ch/docs/TPAMI19_Rebecq.pdf},
-  year          = 2019
+## Contents
+
+1. Requirements
+2. Installation
+3. Usage
+4. Custom Settings
+5. Citation
+6. Acknowledgements
+
+## 1/Requirements
+
+`CarlaEnv-Benchmark` is developed and tested under the following settings:
+
+- **Ubuntu**: 18.04
+- **Carla**: 0.9.13
+- **Python**: 3.7.13
+
+## 2/Installation
+
+- Download the compiled release version and additional maps of CARLA 0.9.13 from [here](https://github.com/carla-simulator/carla/releases/tag/0.9.13) or using the following code:
+```shell
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/CARLA_0.9.13.tar.gz
+mkdir CARLA_0.9.13
+tar -zxvf CARLA_0.9.13.tar.gz -C CARLA_0.9.13
+
+cd CARLA_0.9.13/
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/AdditionalMaps_0.9.13.tar.gz
+tar -zxvf AdditionalMaps_0.9.13.tar.gz
+```
+
+
+- Installing the Python API of Carla:
+```bash
+cd carla_0.9.13/PythonAPI/carla/dist
+easy_install carla-0.9.13-py3.7-linux-x86_64.egg
+```
+
+
+- Download source code of `CarlaEnv-Benchmark`:
+```bash
+git clone https://github.com/kyoran/CarlaEnv-Benchmark
+```
+
+
+- Installing necessary packages:
+```bash
+pip install -r requirements.txt
+```
+
+## 3/Usage
+
+- We first need to run the rendering engine CARLA server in the background:
+```shell
+cd carla_0.9.13/
+DISPLAY= ./CarlaUE4.sh -opengl -RenderOffScreen -world-port=12321
+```
+
+
+- To manipulate the environment through the Python API, we need to add the following code to the start of the script or the main function:
+```python
+import json
+import matplotlib.pyplot as plt
+
+from env.CarlaEnv import CarlaEnv
+from utils.VideoRecorder import VideoRecorder
+```
+
+- We also need to load config files:
+```python
+with open('./cfg/weather.json', 'r', encoding='utf8') as fff:
+    weather_params = json.load(fff)
+with open('./cfg/scenario.json', 'r', encoding='utf8') as fff:
+    scenario_params = json.load(fff)
+```
+
+- Then, we can create a carla environment with selected weather "hard_high_light" and selected scenario "jaywalk":
+```python
+carla_env = CarlaEnv(
+    weather_params=weather_params,
+    scenario_params=scenario_params,
+    selected_weather="hard_high_light",
+    selected_scenario="jaywalk",
+    carla_rpc_port=12321,
+    carla_tm_port=18935,
+    carla_timeout=8,
+    perception_type="dvs+vidar",
+    num_cameras=5,
+    rl_image_size=256,
+    fov=60,
+    max_fps=120,
+    min_fps=30,
+    max_episode_steps=1000,
+    frame_skip=1,
+    ego_auto_pilot=True,   # testing purpose
+    is_spectator=True,     # rendering mode
+)
+```
+
+- To record what has happened in the process of simulation, we can create a recorder:
+```python
+video = VideoRecorder("./video", min_fps=30, max_fps=120)
+```
+
+- Now the simulation is running by using the following code, with numerous vehicles driving around the map, several pedestrians jaywalking, and a third-person-perspective camera recording data, and five first-person perspective perception data from the ego vehicle. This data can then be used to feed a machine learning algorithm for training an autonomous driving agent.
+```
+obs = carla_env.reset()
+video.init(True)
+for one_step in range(400):
+    action = [0, 0.7]
+    obs, reward, done, info = carla_env.step(action)
+
+    video.record(obs, carla_env.vehicle)
+video.save("test")
+```
+
+Finally, we can get recorded video in the 'video' directory.
+
+## 4/Custom Settings
+
+
+We provide five scenarios and six weathers:
+
+### 4.1/Scenario
+
+- ***highway***
+- ***narrow***
+- ***jaywalk***
+- ***tunnel*** 
+- ***merging***
+
+
+### 4.2/Weather
+
+- ***hard_high_light***
+- ***soft_high_light***
+- ***soft_low_light***
+- ***hard_low_light***
+- ***soft_noisy_low_light***
+- ***hard_noisy_low_light***
+
+
+## 5/Citation
+Publications using `CarlaEnv-Benchmark` are recorded in [Publications]. If you use [repo-name] in your paper, you can also add it to this table by pull request.
+
+If you use SpikingJelly in your work, please cite it as follows:
+```latex
+@misc{CarlaEnv-Benchmark,
+    title = {CarlaEnv-Benchmark},
+    author = {Xu, Haoran and Chen, Ding and other contributors},
+    year = {2022},
+    howpublished = {\url{https://github.com/kyoran/CarlaEnv-Benchmark}},
+    note = {Accessed: YYYY-MM-DD},
 }
 ```
 
+***Note***: To specify the version of `CarlaEnv-Benchmark` you are using, the default value `YYYY-MM-DD` in the note field should be replaced with the date of the last change of the framework you are using, i.e. the date of the latest commit.
 
-```bibtex
-@Article{Rebecq19cvpr,
-  author        = {Henri Rebecq and Ren{\'{e}} Ranftl and Vladlen Koltun and Davide Scaramuzza},
-  title         = {Events-to-Video: Bringing Modern Computer Vision to Event Cameras},
-  journal       = {{IEEE} Conf. Comput. Vis. Pattern Recog. (CVPR)},
-  year          = 2019
-}
-```
+## 6/Acknowledgements
+Sun Yat-Sen University, Shanghai Jiao Tong University, Peking University, and Peng Cheng Laboratory are the main developers of `CarlaEnv-Benchmark`.
 
-## Install
 
-Dependencies:
+<div align="center">
+<table border="0">
+    <tr>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png" width="80" height="80" alt="sysu" /></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.png" width="80" height="80" alt="sjtu" /></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pku_logo.png" width="80" height="80" alt="pku" /></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pcnl_logo.png" width="80" height="80" alt="pcnl" /></td>
+    </tr>
+</table>
+</div>
 
-- [PyTorch](https://pytorch.org/get-started/locally/) >= 1.0
-- [NumPy](https://www.numpy.org/)
-- [Pandas](https://pandas.pydata.org/)
-- [OpenCV](https://opencv.org/)
 
-### Install with Anaconda
-
-The installation requires [Anaconda3](https://www.anaconda.com/distribution/).
-You can create a new Anaconda environment with the required dependencies as follows (make sure to adapt the CUDA toolkit version according to your setup):
-
-```bash
-conda create -n E2VID
-conda activate E2VID
-conda install pytorch torchvision cudatoolkit=10.0 -c pytorch
-conda install pandas
-conda install -c conda-forge opencv
-```
-
-## Run
-
-- Download the pretrained model:
-
-```bash
-wget "http://rpg.ifi.uzh.ch/data/E2VID/models/E2VID_lightweight.pth.tar" -O pretrained/E2VID_lightweight.pth.tar
-```
-
-- Download an example file with event data:
-
-```bash
-wget "http://rpg.ifi.uzh.ch/data/E2VID/datasets/ECD_IJRR17/dynamic_6dof.zip" -O data/dynamic_6dof.zip
-```
-
-Before running the reconstruction, make sure the conda environment is sourced:
-
-```bash
-conda activate E2VID
-```
-
-- Run reconstruction:
-
-```bash
-python run_reconstruction.py \
-  -c pretrained/E2VID_lightweight.pth.tar \
-  -i data/dynamic_6dof.zip \
-  --auto_hdr \
-  --display \
-  --show_events
-```
-
-## Parameters
-
-Below is a description of the most important parameters:
-
-#### Main parameters
-
-- ``--window_size`` / ``-N`` (default: None) Number of events per window. This is the parameter that has the most influence of the image reconstruction quality. If set to None, this number will be automatically computed based on the sensor size, as N = width * height * num_events_per_pixel (see description of that parameter below). Ignored if `--fixed_duration` is set.
-- ``--fixed_duration`` (default: False) If True, will use windows of events with a fixed duration (i.e. a fixed output frame rate).
-- ``--window_duration`` / ``-T`` (default: 33 ms) Duration of each event window, in milliseconds. The value of this parameter has strong influence on the image reconstruction quality. Its value may need to be adapted to the dynamics of the scene. Ignored if `--fixed_duration` is not set.
-- ``--Imin`` (default: 0.0), `--Imax` (default: 1.0): linear tone mapping is performed by normalizing the output image as follows: `I = (I - Imin) / (Imax - Imin)`. If `--auto_hdr` is set to True, `--Imin` and `--Imax` will be automatically computed as the min (resp. max) intensity values.
-- ``--auto_hdr`` (default: False) Automatically compute `--Imin` and `--Imax`. Disabled when `--color` is set.
-- ``--color`` (default: False): if True, will perform color reconstruction as described in the paper. Only use this with a [color event camera](http://rpg.ifi.uzh.ch/CED.html) such as the Color DAVIS346.
-
-#### Output parameters
-
-- ``--output_folder``: path of the output folder. If not set, the image reconstructions will not be saved to disk.
-- ``--dataset_name``: name of the output folder directory (default: 'reconstruction').
-
-#### Display parameters
-
-- ``--display`` (default: False): display the video reconstruction in real-time in an OpenCV window.
-- ``--show_events`` (default: False): show the input events side-by-side with the reconstruction. If ``--output_folder`` is set, the previews will also be saved to disk in ``/path/to/output/folder/events``.
-
-#### Additional parameters
-
-- ``--num_events_per_pixel`` (default: 0.35): Parameter used to automatically estimate the window size based on the sensor size. The value of 0.35 was chosen to correspond to ~ 15,000 events on a 240x180 sensor such as the DAVIS240C.
-- ``--no-normalize`` (default: False): Disable event tensor normalization: this will improve speed a bit, but might degrade the image quality a bit.
-- ``--no-recurrent`` (default: False): Disable the recurrent connection (i.e. do not maintain a state). For experimenting only, the results will be flickering a lot.
-- ``--hot_pixels_file`` (default: None): Path to a file specifying the locations of hot pixels (such a file can be obtained with [this tool](https://github.com/cedric-scheerlinck/dvs_tools/tree/master/dvs_hot_pixel_filter) for example). These pixels will be ignored (i.e. zeroed out in the event tensors).
-
-## Example datasets
-
-We provide a list of example (publicly available) event datasets to get started with E2VID.
-
-- [High Speed (gun shooting!) and HDR Dataset](http://rpg.ifi.uzh.ch/E2VID.html)
-- [Event Camera Dataset](http://rpg.ifi.uzh.ch/data/E2VID/datasets/ECD_IJRR17/)
-- [Bardow et al., CVPR'16](http://rpg.ifi.uzh.ch/data/E2VID/datasets/SOFIE_CVPR16/)
-- [Scherlinck et al., ACCV'18](http://rpg.ifi.uzh.ch/data/E2VID/datasets/HF_ACCV18/)
-- [Color event sequences from the CED dataset Scheerlinck et al., CVPR'18](http://rpg.ifi.uzh.ch/data/E2VID/datasets/CED_CVPRW19/)
-
-## Working with ROS
-
-Because PyTorch recommends Python 3 and ROS is only compatible with Python2, it is not straightforward to have the PyTorch reconstruction code and ROS code running in the same environment.
-To make things easy, the reconstruction code we provide has no dependency on ROS, and simply read events from a text file or ZIP file.
-We provide convenience functions to convert ROS bags (a popular format for event datasets) into event text files.
-In addition, we also provide scripts to convert a folder containing image reconstructions back to a rosbag (or to append image reconstructions to an existing rosbag).
-
-**Note**: it is **not** necessary to have a sourced conda environment to run the following scripts. However, [ROS](https://www.ros.org/) needs to be installed and sourced.
-
-### rosbag -> events.txt
-
-To extract the events from a rosbag to a zip file containing the event data:
-
-```bash
-python scripts/extract_events_from_rosbag.py /path/to/rosbag.bag \
-  --output_folder=/path/to/output/folder \
-  --event_topic=/dvs/events
-```
-
-### image reconstruction folder -> rosbag
-
-```bash
-python scripts/image_folder_to_rosbag.py \
-  --datasets dynamic_6dof \
-  --image_folder /path/to/image/folder \
-  --output_folder /path/to/output_folder \
-  --image_topic /dvs/image_reconstructed
-```
-
-### Append image_reconstruction_folder to an existing rosbag
-
-```bash
-cd scripts
-python embed_reconstructed_images_in_rosbag.py \
-  --rosbag_folder /path/to/rosbag/folder \
-  --datasets dynamic_6dof \
-  --image_folder /path/to/image/folder \
-  --output_folder /path/to/output_folder \
-  --image_topic /dvs/image_reconstructed
-```
-
-### Generating a video reconstruction (with a fixed framerate)
-
-It can be convenient to convert an image folder to a video with a fixed framerate (for example for use in a video editing tool).
-You can proceed as follows:
-
-```bash
-export FRAMERATE=30
-python resample_reconstructions.py -i /path/to/input_folder -o /tmp/resampled -r $FRAMERATE
-ffmpeg -framerate $FRAMERATE -i /tmp/resampled/frame_%010d.png video_"$FRAMERATE"Hz.mp4
-```
-
-## Acknowledgements
-
-This code borrows from the following open source projects, whom we would like to thank:
-
-- [pytorch-template](https://github.com/victoresque/pytorch-template)
+The list of developers can be found [here](https://github.com/kyoran/CarlaEnv-Benchmark/graphs/contributors).
