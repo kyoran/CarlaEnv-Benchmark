@@ -24,7 +24,7 @@ class CarlaEnv(object):
                  selected_weather, selected_scenario,
                  carla_rpc_port, carla_tm_port, carla_timeout,
                  perception_type, num_cameras, rl_image_size, fov,
-                 max_fps, min_fps,
+                 max_fps, min_fps, control_hz,
                  max_episode_steps, frame_skip,
                  is_spectator=False, ego_auto_pilot=False,
                  dvs_rec_args=None,
@@ -47,7 +47,8 @@ class CarlaEnv(object):
         self.fov = fov
         self.max_fps = max_fps
         self.min_fps = min_fps
-        self.max_episode_steps = max_episode_steps
+        self.control_hz = control_hz
+        self.max_episode_steps = 20 * self.max_fps
 
         self.selected_weather = selected_weather
         self.selected_scenario = selected_scenario
@@ -72,8 +73,8 @@ class CarlaEnv(object):
             self.rec_model .eval()
 
         elif self.perception_type == "vidar-rec-frame":
-            sys.path.append("./tools/xxxxx")
-            from xxxx import xxxx
+            sys.path.append("./tools/vidar2frame")
+            # vidar reconstruction do not need to load a model
 
 
         # client init
@@ -439,12 +440,19 @@ class CarlaEnv(object):
         self.return_ = 0
         self.velocities = []
 
+        self.reward = [0]
+        self.perception_data = []
+        self.last_action = None
+
         # MUST warm up !!!!!!
-        # take some steps to get ready for the dvs camera, walkers, and vehicles
-        warm_up_max_steps = 15
+        # take some steps to get ready for the dvs+vidar camera, walkers, and vehicles
+        obs = None
+        warm_up_max_steps = self.control_hz     # 15
         while warm_up_max_steps > 0:
             warm_up_max_steps -= 1
-            self.world.tick()
+            # self.world.tick()
+            obs, _, _, _ = self.step(None)
+            # print("len:self.perception_data:", len(self.perception_data))
             
         # self.vehicle.set_autopilot(True, self.carla_tm_port)
         # while abs(self.vehicle.get_velocity().x) < 0.02:
@@ -458,11 +466,9 @@ class CarlaEnv(object):
         #         break
         # self.vehicle.set_autopilot(False, self.carla_tm_port)
 
-        obs, _, _, _ = self.step(None)
-
-        print("carla env reset done.")
-
+        self.init_frame = self.frame
         self.reset_num += 1
+        # print("carla env reset done.")
 
         return obs
 
@@ -735,14 +741,15 @@ class CarlaEnv(object):
             self.dvs_data = {'frame': [0] * self.num_cameras, 'timestamp': [0.0] * self.num_cameras, 'events': None,
                              'events_tmp': [],
                              'img': np.zeros((self.rl_image_size, self.rl_image_size * self.num_cameras, 3), dtype=np.uint8),
-                             'rec-img': np.zeros((self.rl_image_size, self.rl_image_size * self.num_cameras, 1), dtype=np.uint8),
+                             # 'rec-img': np.zeros((self.rl_image_size, self.rl_image_size * self.num_cameras, 1), dtype=np.uint8),
                              }
         if self.perception_type.__contains__("vidar"):
             self.vidar_data = {'frame': [0] * self.num_cameras, 'timestamp': [0.0] * self.num_cameras,
                                'voltage': np.zeros((self.rl_image_size, self.rl_image_size*self.num_cameras), dtype=np.uint16),
                                'spike': np.zeros((self.rl_image_size, self.rl_image_size*self.num_cameras), dtype=np.bool_),
                                'img': np.zeros((self.rl_image_size, self.rl_image_size*self.num_cameras, 3), dtype=np.uint8),
-                               'rec-img': np.zeros((self.rl_image_size, self.rl_image_size * self.num_cameras, 1), dtype=np.uint8),
+                               # 'captured_cam': [],
+                               # 'rec-img': np.zeros((self.rl_image_size, self.rl_image_size * self.num_cameras, 1), dtype=np.uint8),
                                }
 
         self.frame = None
@@ -846,15 +853,15 @@ class CarlaEnv(object):
                     self.dvs_data['events'] = self.dvs_data['events'][np.argsort(self.dvs_data['events'][:, -1])]
 
                     # rec
-                    if self.perception_type.__contains__("dvs") and self.perception_type.__contains__("rec"):
-                        from run_dvs_rec import run_dvs_rec
-                        out = run_dvs_rec(
-                            # x, y, p, t -> t, x, y, p
-                            self.dvs_data['events'][:, [3, 0, 1, 2]],
-                            self.rec_model, self.device, self.dvs_rec_args)
-                        # print(out.shape, out.dtype)
-                        # print(out[:5, :5])
-                        self.dvs_data['rec-img'][:, :, 0] = out
+                    # if self.perception_type.__contains__("dvs") and self.perception_type.__contains__("rec"):
+                    #     from run_dvs_rec import run_dvs_rec
+                    #     out = run_dvs_rec(
+                    #         # x, y, p, t -> t, x, y, p
+                    #         self.dvs_data['events'][:, [3, 0, 1, 2]],
+                    #         self.rec_model, self.device, self.dvs_rec_args)
+                    #     # print(out.shape, out.dtype)
+                    #     # print(out[:5, :5])
+                    #     self.dvs_data['rec-img'][:, :, 0] = out
 
                     # init start, x, y, p, t
                     # (event_num, 4)
@@ -947,6 +954,21 @@ class CarlaEnv(object):
                 self.vidar_data['img'][:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size, 1] = \
                     (self.vidar_data['spike'] * 255)[:, one_camera_idx * self.rl_image_size: (one_camera_idx + 1) * self.rl_image_size].astype(np.uint8)
 
+                # if len(self.vidar_data["captured_cam"]) != 5:
+                #     self.vidar_data["captured_cam"].append(one_camera_idx)
+                # else:
+                #     self.vidar_data['captured_cam'].clear()
+                #
+                #     # rec
+                #     if self.perception_type.__contains__("vidar") and self.perception_type.__contains__("rec"):
+                #         from run_vidar_rec import run_vidar_rec
+                #         out = run_vidar_rec(
+                #             # x, y, p, t -> t, x, y, p
+                #             self.dvs_data['events'][:, [3, 0, 1, 2]],
+                #             self.rec_model, self.device, self.dvs_rec_args)
+                #         # print(out.shape, out.dtype)
+                #         # print(out[:5, :5])
+                #         self.dvs_data['rec-img'][:, :, 0] = out
 
             self.vidar_camera_left2 = self.world.spawn_actor(
                 self.vidar_camera_bp, carla.Transform(location, carla.Rotation(yaw=-float(self.fov) * 2)),
@@ -1021,7 +1043,80 @@ class CarlaEnv(object):
                 break
         return next_obs, np.mean(rewards), done, info  # just last info?
 
-    def _simulator_step(self, action, dt=0.05):
+    def get_reward(self):
+        reward = sum(self.reward)
+        self.reward = []
+        return reward
+
+    def get_perception(self):
+
+        perception_data = self.perception_data
+
+        # 根据perception_type进行预处理
+        if self.perception_type.__contains__("rgb"):
+            perception_data = np.transpose(perception_data, (2, 0, 1))
+            perception_data = (perception_data / 255.).astype(np.float32)
+            # print("perception_data:", perception_data.min(), perception_data.max())
+
+
+        elif self.perception_type.__contains__("dvs"):
+            # print("get self.perception_data:", len(self.perception_data))
+
+            # 把events汇总
+            events_window = np.concatenate(perception_data, axis=0)
+            events_window = events_window[np.argsort(events_window[:, -1])]
+            # print("events_window:", events_window.shape)
+            # print(events_window)
+
+            perception_data = events_window
+
+            if self.perception_type.__contains__("stream"):
+                pass
+            elif self.perception_type.__contains__("rec"):
+                # print("in dvs rec")
+
+                from run_dvs_rec import run_dvs_rec
+                perception_data = run_dvs_rec(
+                    # x, y, p, t -> t, x, y, p
+                    perception_data[:, [3, 0, 1, 2]],
+                    self.rec_model, self.device, self.dvs_rec_args)
+                # print(out.shape, out.dtype)
+                # print(out[:5, :5])
+                # print("raw dvs.shape:", perception_data.shape)
+                perception_data = np.transpose(perception_data[..., np.newaxis], (2, 0, 1))
+                perception_data = (perception_data / 255.).astype(np.float32)
+                # print("perception_data:", perception_data.min(), perception_data.max())
+
+                # print("after dvs rec.shape:", perception_data.shape)
+
+        elif self.perception_type.__contains__("vidar"):
+            if self.perception_type.__contains__("stream"):
+                pass
+            elif self.perception_type.__contains__("rec"):
+                # print("in vidar rec")
+
+                from run_vidar_rec import run_vidar_rec
+                perception_data = run_vidar_rec(perception_data)
+                # print("r", perception_data.shape, perception_data.dtype)
+                # print(perception_data)
+                perception_data = np.transpose(perception_data[..., np.newaxis], (2, 0, 1))
+                # print("vidar rec:", perception_data.min(), perception_data.max())
+                # print(perception_data[np.where((perception_data>0) & (perception_data<1))])
+                # print("a", perception_data.shape, perception_data.dtype)
+
+        # 重置
+        # if self.perception_type.__contains__("rgb"):
+        #     pass
+        # else:
+        #     self.perception_data.clear()
+        self.perception_data = []
+
+        return perception_data
+
+    def _simulator_step(self, action, dt=0.1):
+
+        if action is None and self.last_action is not None:
+            action = self.last_action
 
         if action is not None:
             steer = float(action[0])
@@ -1032,6 +1127,9 @@ class CarlaEnv(object):
             else:
                 throttle = 0.0
                 brake = -throttle_brake
+
+            self.last_action = action
+
         else:
             throttle, steer, brake = 0., 0., 0.
 
@@ -1047,6 +1145,7 @@ class CarlaEnv(object):
             manual_gear_shift=False
         )
         self.vehicle.apply_control(vehicle_control)
+
 
         self._control_all_walkers()
 
@@ -1080,6 +1179,7 @@ class CarlaEnv(object):
 
         collision_cost = 0.001 * collision_intensities_during_last_time_step
         reward = vel_s * dt - collision_cost - abs(steer)
+        self.reward.append(reward)
 
         self.dist_s += vel_s * self.delta_seconds
         self.return_ += reward
@@ -1096,23 +1196,32 @@ class CarlaEnv(object):
                 'dvs_frame': self.dvs_data['img'],
                 'dvs_events': self.dvs_data['events']
             })
-            if self.perception_type.__contains__("rec"):
-                next_obs.update({
-                    'dvs_rec_img': self.dvs_data['rec-img'],
-                    'perception': self.dvs_data['rec-img']
-                })
-            elif self.perception_type.__contains__("stream"):
-                next_obs.update({
-                    'perception': self.dvs_data['events']
-                })
+            self.perception_data.append(self.dvs_data['events'].copy())
+
+            # if self.perception_type.__contains__("rec"):
+            #     next_obs.update({
+            #         'dvs_rec_img': self.dvs_data['rec-img'],
+            #         'perception': self.dvs_data['rec-img']
+            #     })
+            #     self.perception_data.append(self.dvs_data['rec-img'])
+            #
+            # elif self.perception_type.__contains__("stream"):
+            #     next_obs.update({
+            #         'perception': self.dvs_data['events']
+            #     })
+            #     self.perception_data.append(self.dvs_data['events'])
+
         elif self.perception_type.__contains__("vidar"):
             next_obs.update({
                 'vidar_frame': self.vidar_data['img']
             })
+            self.perception_data.append(self.vidar_data['spike'].copy())
+
         elif self.perception_type.__contains__("rgb"):
-            next_obs.update({
-                'perception': self.rgb_data['img']
-            })
+            # next_obs.update({
+            #     'perception': self.rgb_data['img']
+            # })
+            self.perception_data = self.rgb_data['img'].copy()
 
         info['crash_intensity'] = collision_intensities_during_last_time_step
         info['throttle'] = throttle
@@ -1140,7 +1249,7 @@ class CarlaEnv(object):
             print("Episode success: I've reached the episode horizon ({}).".format(self.max_episode_steps))
             done = True
         #         if speed < 0.02 and self.time_step >= 8 * (self.fps) and self.time_step % 8 * (self.fps) == 0:  # a hack, instead of a counter
-        if speed < 0.02 and self.time_step >= 100 and self.time_step % 100 == 0:  # a hack, instead of a counter
+        if speed < 0.02 and self.time_step >= (2 * self.max_fps) and self.time_step % (2 * self.max_fps) == 0:  # a hack, instead of a counter
             print("Episode fail: speed too small ({}), think I'm stuck! (frame {})".format(speed, self.time_step))
             info['reason_episode_ended'] = 'stuck'
             done = True
