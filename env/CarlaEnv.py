@@ -1029,7 +1029,8 @@ class CarlaEnv(object):
         self.weather.sun_azimuth_angle = weather_params["sun_azimuth_angle"]
         self.weather.sun_altitude_angle = weather_params["sun_altitude_angle"]
 
-        self.world.set_weather(self.weather)
+        self.world.set_weather(self.weather) 
+        # or self.world.set_weather(carla.WeatherParameters.ClearNoon)
 
     def step(self, action):
         rewards = []
