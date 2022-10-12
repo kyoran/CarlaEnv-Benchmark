@@ -12,6 +12,7 @@ import os
 import sys
 import time
 import math
+import torch
 import random
 import numpy as np
 from dotmap import DotMap
@@ -372,6 +373,9 @@ class CarlaEnv(object):
             os.environ['PYTHONHASHSEED'] = str(seed)
             np.random.seed(seed)
             random.seed(seed)
+            torch.manual_seed(seed)  # Current CPU
+            torch.cuda.manual_seed(seed)  # Current GPU
+            torch.cuda.manual_seed_all(seed)  # All GPU (Optional)
 
             self.tm.set_random_device_seed(seed)
 
@@ -413,7 +417,7 @@ class CarlaEnv(object):
             # lm
             self.lm = self.world.get_lightmanager()
 
-        # 
+        #
         self._set_seed(seed)
 
         # reset
@@ -721,6 +725,7 @@ class CarlaEnv(object):
                     self.vehicle.apply_physics_control(physics_control)
                     self.vehicle.apply_control(carla.VehicleControl(throttle=0, brake=1, manual_gear_shift=True, gear=1))
                 break
+
             else:
                 ego_spawn_times += 1
                 time.sleep(0.01)
@@ -1029,8 +1034,7 @@ class CarlaEnv(object):
         self.weather.sun_azimuth_angle = weather_params["sun_azimuth_angle"]
         self.weather.sun_altitude_angle = weather_params["sun_altitude_angle"]
 
-        self.world.set_weather(self.weather) 
-        # or self.world.set_weather(carla.WeatherParameters.ClearNoon)
+        self.world.set_weather(self.weather)
 
     def step(self, action):
         rewards = []
@@ -1173,7 +1177,7 @@ class CarlaEnv(object):
         else:
             self.collide_count = 0
         if self.collide_count >= 20:
-            print("Episode fail: too many collisions ({})! (frame {})".format(speed, self.collide_count))
+            print("Episode fail: too many collisions ({})! (collide_count: {})".format(speed, self.collide_count))
             done = True
 
         #         reward = vel_s * dt / (1. + dist_from_center) - 1.0 * colliding - 0.1 * brake - 0.1 * abs(steer)
@@ -1212,13 +1216,14 @@ class CarlaEnv(object):
             #     })
             #     self.perception_data.append(self.dvs_data['events'])
 
-        elif self.perception_type.__contains__("vidar"):
+        if self.perception_type.__contains__("vidar"):
             next_obs.update({
-                'vidar_frame': self.vidar_data['img']
+                'vidar_frame': self.vidar_data['img'],
+                'vidar_spikes': self.vidar_data['spike'],
             })
             self.perception_data.append(self.vidar_data['spike'].copy())
 
-        elif self.perception_type.__contains__("rgb"):
+        if self.perception_type.__contains__("rgb"):
             # next_obs.update({
             #     'perception': self.rgb_data['img']
             # })
