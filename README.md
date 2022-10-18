@@ -4,7 +4,7 @@ An open source benchmark for (multi-task) reinforcement learning of autonomous v
 <div align="center">
 <table border="0">
     <tr>
-        <td></td>
+        <td>Weather/Scenario</td>
         <td>highway</td>
         <td>narrow</td>
         <td>jaywalk</td>
@@ -15,50 +15,49 @@ An open source benchmark for (multi-task) reinforcement learning of autonomous v
         <td>hard_high_light</td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/highway-hard_high_light.gif" width="120" height="90"/></td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/narrow-hard_high_light.gif" width="120" height="90"/></td>
-        <td></td>
-        <td></td>
-        <td></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/jaywalk-hard_high_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/tunnel-hard_high_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/crash-hard_high_light.gif" width="120" height="90"/></td>
     </tr>
     <tr>
         <td>soft_high_light</td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/highway-soft_high_light.gif" width="120" height="90"/></td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/narrow-soft_high_light.gif" width="120" height="90"/></td>
-        <td></td>
-        <td></td>
-        <td></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/jaywalk-soft_high_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/tunnel-soft_high_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/crash-soft_high_light.gif" width="120" height="90"/></td>
     </tr>
     <tr>
         <td>soft_low_light</td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/highway-soft_low_light.gif" width="120" height="90"/></td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/narrow-soft_low_light.gif" width="120" height="90"/></td>
-        <td></td>
-        <td></td>
-        <td></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/jaywalk-soft_low_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/tunnel-soft_low_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/crash-soft_low_light.gif" width="120" height="90"/></td>
     </tr>
     <tr>
         <td>hard_low_light</td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/highway-hard_low_light.gif" width="120" height="90"/></td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/narrow-hard_low_light.gif" width="120" height="90"/></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/jaywalk-hard_low_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/tunnel-hard_low_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/crash-hard_low_light.gif" width="120" height="90"/></td>
     </tr>
     <tr>
         <td>soft_noisy_low_light</td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/highway-soft_noisy_low_light.gif" width="120" height="90"/></td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/narrow-soft_noisy_low_light.gif" width="120" height="90"/></td>
-        <td></td>
-        <td></td>
-        <td></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/jaywalk-soft_noisy_low_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/tunnel-soft_noisy_low_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/crash-soft_noisy_low_light.gif" width="120" height="90"/></td>
     </tr>
     <tr>
         <td>hard_noisy_low_light</td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/highway-hard_noisy_low_light.gif" width="120" height="90"/></td>
         <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/narrow-hard_noisy_low_light.gif" width="120" height="90"/></td>
-        <td></td>
-        <td></td>
-        <td></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/jaywalk-hard_noisy_low_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/tunnel-hard_noisy_low_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/crash-hard_noisy_low_light.gif" width="120" height="90"/></td>
     </tr>
 </table>    
 </div>
