@@ -26,7 +26,7 @@ class CarlaEnv(object):
                  carla_rpc_port, carla_tm_port, carla_timeout,
                  perception_type, num_cameras, rl_image_size, fov,
                  max_fps, min_fps, control_hz,
-                 max_episode_steps, frame_skip,
+                 min_stuck_steps, max_episode_steps, frame_skip,
                  is_spectator=False, ego_auto_pilot=False,
                  dvs_rec_args=None,
                  ):
@@ -49,7 +49,14 @@ class CarlaEnv(object):
         self.max_fps = max_fps
         self.min_fps = min_fps
         self.control_hz = control_hz
-        self.max_episode_steps = 20 * self.max_fps
+        if max_episode_steps is None:
+            self.max_episode_steps = 20 * self.max_fps
+        else:
+            self.max_episode_steps = max_episode_steps
+        if min_stuck_steps is None:
+            self.min_stuck_steps = 2 * self.max_fps
+        else:
+            self.min_stuck_steps = min_stuck_steps
 
         self.selected_weather = selected_weather
         self.selected_scenario = selected_scenario
@@ -379,11 +386,23 @@ class CarlaEnv(object):
 
             self.tm.set_random_device_seed(seed)
 
-    def reset(self, seed=None):
+    def reset(self, selected_scenario=None, selected_weather=None, seed=None):
 
         self._clear_all_actors()
 
         # self.client.reload_world(reset_settings = True)
+
+        if selected_scenario is not None:
+            self.reset_num = 0
+            self.selected_scenario = selected_scenario
+
+            # print("map:", self.scenario_params[self.selected_scenario]["map"])
+            self.client.reload_world(reset_settings=True)
+            self.world = self.client.load_world(self.scenario_params[self.selected_scenario]["map"])
+            # print("reload done")
+
+        if selected_weather is not None:
+            self.selected_weather = selected_weather
 
         if self.reset_num == 0:
 
@@ -393,7 +412,6 @@ class CarlaEnv(object):
             #     map_name = self.scenario_params[self.selected_scenario]["map"],
             #     reset_settings = False
             # )
-
             # remove dynamic objects to prevent 'tables' and 'chairs' flying in the sky
             env_objs = self.world.get_environment_objects(carla.CityObjectLabel.Dynamic)
             objects_to_toggle = set([one_env_obj.id for one_env_obj in env_objs])
@@ -438,7 +456,6 @@ class CarlaEnv(object):
         #     self.spectator.set_transform(
         #         carla.Transform(self.vehicle.get_transform().location + carla.Location(z=40),
         #         carla.Rotation(pitch=-90)))
-
         self.time_step = 0
         self.dist_s = 0
         self.return_ = 0
@@ -451,11 +468,15 @@ class CarlaEnv(object):
         # MUST warm up !!!!!!
         # take some steps to get ready for the dvs+vidar camera, walkers, and vehicles
         obs = None
-        warm_up_max_steps = self.control_hz     # 15
+        # warm_up_max_steps = self.control_hz     # 15
+        warm_up_max_steps = 15
         while warm_up_max_steps > 0:
             warm_up_max_steps -= 1
-            # self.world.tick()
             obs, _, _, _ = self.step(None)
+
+            # self.world.tick()
+
+
             # print("len:self.perception_data:", len(self.perception_data))
             
         # self.vehicle.set_autopilot(True, self.carla_tm_port)
@@ -470,6 +491,7 @@ class CarlaEnv(object):
         #         break
         # self.vehicle.set_autopilot(False, self.carla_tm_port)
 
+        self.time_step = 0
         self.init_frame = self.frame
         self.reset_num += 1
         # print("carla env reset done.")
@@ -554,13 +576,77 @@ class CarlaEnv(object):
                         # print(f"\t spawn vehicle: {total_surrounding_veh_num}, at {veh_pos.location}")
 
     def reset_special_vehicles(self):
-        pass
+        special_veh_params = self.scenario_params[self.selected_scenario]["special_veh"]
+        veh_bp = self.bp_lib.filter('vehicle.*')
+        veh_bp = [x for x in veh_bp if int(x.get_attribute('number_of_wheels')) == 4]
+
+        for one_part in range(len(special_veh_params)):
+            veh_num = special_veh_params[one_part]["num"]
+
+            while veh_num > 0:
+
+                rand_veh_bp = random.choice(veh_bp)
+
+                spawn_road_id = special_veh_params[one_part]["road_id"]
+                spawn_lane_id = random.choice(
+                    special_veh_params[one_part]["lane_id"])
+                spawn_start_s = np.random.uniform(
+                    special_veh_params[one_part]["start_pos"][0],
+                    special_veh_params[one_part]["start_pos"][1],
+                )
+
+                veh_pos = self.map.get_waypoint_xodr(
+                    road_id=spawn_road_id,
+                    lane_id=spawn_lane_id,
+                    s=spawn_start_s,
+                ).transform
+                veh_pos.location.z += 0.1
+                veh_pos.rotation.pitch = special_veh_params[one_part]["pitch_range"] \
+                    if special_veh_params[one_part]["pitch_range"] == 0 \
+                    else np.random.uniform(special_veh_params[one_part]["pitch_range"][0],
+                                           special_veh_params[one_part]["pitch_range"][1])
+                veh_pos.rotation.yaw = special_veh_params[one_part]["yaw_range"] \
+                    if special_veh_params[one_part]["yaw_range"] == 0 \
+                    else np.random.uniform(special_veh_params[one_part]["yaw_range"][0],
+                                           special_veh_params[one_part]["yaw_range"][1])
+                veh_pos.rotation.roll = special_veh_params[one_part]["roll_range"] \
+                    if special_veh_params[one_part]["roll_range"] == 0 \
+                    else np.random.uniform(special_veh_params[one_part]["roll_range"][0],
+                                           special_veh_params[one_part]["roll_range"][1])
+
+
+
+                if rand_veh_bp.has_attribute('color'):
+                    color = random.choice(rand_veh_bp.get_attribute('color').recommended_values)
+                    rand_veh_bp.set_attribute('color', color)
+                if rand_veh_bp.has_attribute('driver_id'):
+                    driver_id = random.choice(rand_veh_bp.get_attribute('driver_id').recommended_values)
+                    rand_veh_bp.set_attribute('driver_id', driver_id)
+                rand_veh_bp.set_attribute('role_name', 'autopilot')
+                vehicle = self.world.try_spawn_actor(rand_veh_bp, veh_pos)
+
+                if vehicle is not None:
+                    vehicle.open_door(carla.VehicleDoor.All)
+                    vehicle.set_autopilot(True, self.tm_port)
+                    vehicle.set_target_velocity(carla.Vector3D(0, 0, 0))
+                    vehicle.set_light_state(carla.VehicleLightState.HighBeam)
+                    self.world.tick()
+
+                    self.vehicle_actors.append(vehicle)
+
+                    veh_num -= 1
+
+
 
     def reset_walkers(self):
         walker_bp = self.bp_lib.filter('walker.*')
         total_surrounding_walker_num = 0
 
         walker_params = self.scenario_params[self.selected_scenario]["walker"]
+
+        if len(walker_params) == 0:
+            return
+
         walker_behavior_params = self.scenario_params[self.selected_scenario]["walker_behavior"]
 
         self.left = carla.WalkerControl(
@@ -719,11 +805,22 @@ class CarlaEnv(object):
                     self.tm.ignore_signs_percentage(self.vehicle, 100)
                 else:
                     # immediate running
+                    """
+                    the driver will spend starting the car engine or changing a new gear. 
+                    https://github.com/carla-simulator/carla/issues/3256
+                    https://github.com/carla-simulator/carla/issues/1640
+                    """
+                    # self.vehicle.apply_control(carla.VehicleControl(manual_gear_shift=True, gear=1))
+                    # self.world.tick()
+                    # self.vehicle.apply_control(carla.VehicleControl(manual_gear_shift=False))
+
                     physics_control = self.vehicle.get_physics_control()
                     physics_control.gear_switch_time = 0.01
-                    physics_control.damping_rate_zero_throttle_clutch_engaged=physics_control.damping_rate_zero_throttle_clutch_disengaged
+                    physics_control.damping_rate_zero_throttle_clutch_engaged = physics_control.damping_rate_zero_throttle_clutch_disengaged
                     self.vehicle.apply_physics_control(physics_control)
                     self.vehicle.apply_control(carla.VehicleControl(throttle=0, brake=1, manual_gear_shift=True, gear=1))
+                    # pass
+
                 break
 
             else:
@@ -1063,7 +1160,6 @@ class CarlaEnv(object):
             perception_data = (perception_data / 255.).astype(np.float32)
             # print("perception_data:", perception_data.min(), perception_data.max())
 
-
         elif self.perception_type.__contains__("dvs"):
             # print("get self.perception_data:", len(self.perception_data))
 
@@ -1183,8 +1279,12 @@ class CarlaEnv(object):
         #         reward = vel_s * dt / (1. + dist_from_center) - 1.0 * colliding - 0.1 * brake - 0.1 * abs(steer)
 
         collision_cost = 0.001 * collision_intensities_during_last_time_step
-        reward = vel_s * dt - collision_cost - abs(steer)
+        # reward = vel_s * dt - collision_cost - abs(steer)
+        # reward = speed * dt - collision_cost - abs(steer)
+        reward = vel_s * dt / (1. + dist_from_center) - 1.0 * colliding - 0.1 * brake - 0.1 * abs(steer)
+
         self.reward.append(reward)
+        # print("vel_s:", vel_s, "speed:", speed)
 
         self.dist_s += vel_s * self.delta_seconds
         self.return_ += reward
@@ -1255,7 +1355,7 @@ class CarlaEnv(object):
             print("Episode success: I've reached the episode horizon ({}).".format(self.max_episode_steps))
             done = True
         #         if speed < 0.02 and self.time_step >= 8 * (self.fps) and self.time_step % 8 * (self.fps) == 0:  # a hack, instead of a counter
-        if speed < 0.02 and self.time_step >= (2 * self.max_fps) and self.time_step % (2 * self.max_fps) == 0:  # a hack, instead of a counter
+        if speed < 0.02 and self.time_step >= self.min_stuck_steps and self.time_step % self.min_stuck_steps == 0:  # a hack, instead of a counter
             print("Episode fail: speed too small ({}), think I'm stuck! (frame {})".format(speed, self.time_step))
             info['reason_episode_ended'] = 'stuck'
             done = True

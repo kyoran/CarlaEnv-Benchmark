@@ -1,19 +1,34 @@
 # CarlaEnv-Benchmark
 
-An open source benchmark for representation learning for event-based retinomorphic policy, (multi-task) reinforcement learning of autonomous vehicles, and world modeling of intelligent transportation system, etc.
-
+An open source benchmark for (multi-task) reinforcement learning of autonomous vehicles, and world modeling of intelligent transportation system, etc.
+<div align="center">
 <table>
     <tr>
-        <td></td><td></td><td></td><td></td><td></td><td></td>
+        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
     </tr>
     <tr>
-        <td></td><td></td><td></td><td></td><td></td><td></td>
+        <td>highway</td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/highway-hard_high_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/highway-soft_high_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/highway-soft_low_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/highway-hard_low_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/highway-soft_noisy_low_light.gif" width="120" height="90"/></td>
+        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/highway-hard_noisy_low_light.gif" width="120" height="90"/></td>
     </tr>
     <tr>
-        <td></td><td></td><td></td><td></td><td></td><td></td>
+        <td>narrow</td><td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td>jaywalk</td><td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td>tunnel</td><td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+        <td>merging</td><td></td><td></td><td></td><td></td><td></td><td></td>
     </tr>
 </table>    
-
+</div>
 
 ## Contents
 
@@ -159,7 +174,7 @@ We provide five scenarios and six weathers:
 ## 5/Citation
 Publications using `CarlaEnv-Benchmark` are recorded in [Publications]. If you use [repo-name] in your paper, you can also add it to this table by pull request.
 
-If you use SpikingJelly in your work, please cite it as follows:
+If you use `CarlaEnv-Benchmark` in your work, please cite it as follows:
 ```latex
 @misc{CarlaEnv-Benchmark,
     title = {CarlaEnv-Benchmark},
