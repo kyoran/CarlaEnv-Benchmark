@@ -2,7 +2,7 @@
 
 An open source benchmark for (multi-task) reinforcement learning of autonomous vehicles, and world modeling of intelligent transportation system, etc.
 <div align="center">
-<table border="0">
+<table border="0" border-collapse="collapse">
     <tr>
         <td>Weather/Scenario</td>
         <td>highway</td>
@@ -186,22 +186,40 @@ We provide five scenarios and six weathers:
 
 ### 4.1/Scenario
 
-- ***highway***
-- ***narrow***
-- ***jaywalk***
-- ***tunnel*** 
-- ***merging***
+- ***highway:***
+is a wide road with four lanes that vehicles on it run relatively faster than the other scenarios.
 
+- ***narrow:***
+is a long and narrow S-bend road that vehicles are forbidden to change lanes.
+
+- ***jaywalk:***
+is an intra-city road that some walkers randomly cross.
+
+- ***tunnel:***
+is a tunnel where challenging illumination inevitably happens when entering and exiting.
+
+- ***merging:***
+is a four-lane road that has three lanes randomly blocked by crashed vehicles.
 
 ### 4.2/Weather
 
-- ***hard_high_light***
-- ***soft_high_light***
-- ***soft_low_light***
-- ***hard_low_light***
-- ***soft_noisy_low_light***
-- ***hard_noisy_low_light***
+- ***hard_high_light:***
+is the brightest weather of the midday.
 
+- ***soft_high_light:***
+is the twilight when the sun is about to go down.
+
+- ***soft_low_light:***
+is a cloudy and foggy day.
+
+- ***hard_low_light:***
+is the darkest weather of the midnight.
+
+- ***soft_noisy_low_light:***
+is the dust with little rain.
+
+- ***hard_noisy_low_light:***
+rain cats and dogs in the midnight.
 
 ## 5/Citation
 Publications using `CarlaEnv-Benchmark` are recorded in [Publications]. If you use [repo-name] in your paper, you can also add it to this table by pull request.

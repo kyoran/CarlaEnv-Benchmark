@@ -151,15 +151,20 @@ class CarlaEnv(object):
         self.action_space.shape = [2]
         self.observation_space = DotMap()
         # D, H, W
-        if self.perception_type.__contains__("frame"):
+        if self.perception_type == "RGB-frame":
+            # before stack
             self.observation_space.shape = (3, self.rl_image_size, self.num_cameras * self.rl_image_size)
             self.observation_space.dtype = np.dtype(np.uint8)
-        if self.perception_type.__contains__("rec"):
+        elif self.perception_type == "DVS+E2VID":
             self.observation_space.shape = (1, self.rl_image_size, self.num_cameras * self.rl_image_size)
             self.observation_space.dtype = np.dtype(np.uint8)
-        if self.perception_type.__contains__("stream"):
-            self.observation_space.shape = (None, 4)
-            self.observation_space.dtype = np.dtype(np.float32)
+        elif self.perception_type == "DVS-frame":
+            self.observation_space.shape = (2, self.rl_image_size, self.num_cameras * self.rl_image_size)
+            self.observation_space.dtype = np.dtype(np.uint8)
+
+        # if self.perception_type.__contains__("stream"):
+        #     self.observation_space.shape = (None, 4)
+        #     self.observation_space.dtype = np.dtype(np.float32)
         self.reward_range = None
         self.metadata = None
         self.action_space.sample = lambda: np.random.uniform(
@@ -839,7 +844,7 @@ class CarlaEnv(object):
         self.rgb_data = {'frame': [0] * self.num_cameras, 'timestamp': [0.0] * self.num_cameras,
                          'img': np.zeros((self.rl_image_size, self.rl_image_size * self.num_cameras, 3), dtype=np.uint8)}
 
-        if self.perception_type.__contains__("dvs"):
+        if self.perception_type.__contains__("DVS"):
             self.dvs_data = {'frame': [0] * self.num_cameras, 'timestamp': [0.0] * self.num_cameras, 'events': None,
                              'events_tmp': [],
                              'img': np.zeros((self.rl_image_size, self.rl_image_size * self.num_cameras, 3), dtype=np.uint8),
@@ -927,7 +932,7 @@ class CarlaEnv(object):
         #         print("\t rgb sensors init done.")
 
         # Perception DVS sensor
-        if self.perception_type.__contains__("dvs"):
+        if self.perception_type.__contains__("DVS"):
             def __get_dvs_data__(data, one_camera_idx):
                 #             print("get_dvs_data:", one_camera_idx)
                 events = np.frombuffer(data.raw_data, dtype=np.dtype([
@@ -1272,16 +1277,20 @@ class CarlaEnv(object):
             self.collide_count += 1
         else:
             self.collide_count = 0
+
         if self.collide_count >= 20:
             print("Episode fail: too many collisions ({})! (collide_count: {})".format(speed, self.collide_count))
+            info['reason_episode_ended'] = 'collisions'
             done = True
 
         #         reward = vel_s * dt / (1. + dist_from_center) - 1.0 * colliding - 0.1 * brake - 0.1 * abs(steer)
 
-        collision_cost = 0.001 * collision_intensities_during_last_time_step
+        collision_cost = 0.0001 * collision_intensities_during_last_time_step
         # reward = vel_s * dt - collision_cost - abs(steer)
         # reward = speed * dt - collision_cost - abs(steer)
-        reward = vel_s * dt / (1. + dist_from_center) - 1.0 * colliding - 0.1 * brake - 0.1 * abs(steer)
+        # reward = vel_s * dt / (1. + dist_from_center) - 1.0 * colliding - 0.1 * brake - 0.1 * abs(steer)
+        reward = vel_s * dt - collision_cost - abs(steer)
+
 
         self.reward.append(reward)
         # print("vel_s:", vel_s, "speed:", speed)
@@ -1292,16 +1301,39 @@ class CarlaEnv(object):
         self.time_step += 1
 
         next_obs = {
-            'video_frame': self.video_data['img'],
-            'rgb_frame': self.rgb_data['img'],
+            'video-frame': self.video_data['img'],
+            'RGB-frame': self.rgb_data['img'],
         }
 
-        if self.perception_type.__contains__("dvs"):
-            next_obs.update({
-                'dvs_frame': self.dvs_data['img'],
-                'dvs_events': self.dvs_data['events']
-            })
-            self.perception_data.append(self.dvs_data['events'].copy())
+        if self.perception_type == "DVS-frame":
+            next_obs.update({'DVS-frame': self.dvs_data['img']})
+
+        elif self.perception_type == "DVS+E2VID":
+            next_obs.update({'DVS-frame': self.dvs_data['img']})
+
+            from run_dvs_rec import run_dvs_rec
+
+            dvs_rec_frame = run_dvs_rec(
+                # x, y, p, t -> t, x, y, p
+                self.dvs_data['events'][:, [3, 0, 1, 2]],
+                self.rec_model, self.device, self.dvs_rec_args)
+            print("dvs_rec_frame:", dvs_rec_frame.shape)
+            print("dvs_rec_frame.min():", dvs_rec_frame.min())
+            print("dvs_rec_frame.max():", dvs_rec_frame.max())
+            next_obs.update({'dvs_rec_frame': dvs_rec_frame})
+
+
+        elif self.perception_type == "DVS+E2VID[latent feature]":
+            pass
+        elif self.perception_type == "DVS+eVAE[latent feature]":
+            pass
+
+        # if self.perception_type.__contains__("dvs"):
+        #     next_obs.update({
+        #         'dvs_frame': self.dvs_data['img'],
+        #         'dvs_events': self.dvs_data['events']
+        #     })
+        #     self.perception_data.append(self.dvs_data['events'].copy())
 
             # if self.perception_type.__contains__("rec"):
             #     next_obs.update({
@@ -1316,18 +1348,18 @@ class CarlaEnv(object):
             #     })
             #     self.perception_data.append(self.dvs_data['events'])
 
-        if self.perception_type.__contains__("vidar"):
-            next_obs.update({
-                'vidar_frame': self.vidar_data['img'],
-                'vidar_spikes': self.vidar_data['spike'],
-            })
-            self.perception_data.append(self.vidar_data['spike'].copy())
+        # if self.perception_type.__contains__("vidar"):
+        #     next_obs.update({
+        #         'vidar_frame': self.vidar_data['img'],
+        #         'vidar_spikes': self.vidar_data['spike'],
+        #     })
+        #     self.perception_data.append(self.vidar_data['spike'].copy())
 
-        if self.perception_type.__contains__("rgb"):
-            # next_obs.update({
-            #     'perception': self.rgb_data['img']
-            # })
-            self.perception_data = self.rgb_data['img'].copy()
+        # if self.perception_type.__contains__("rgb"):
+        #     # next_obs.update({
+        #     #     'perception': self.rgb_data['img']
+        #     # })
+        #     self.perception_data = self.rgb_data['img'].copy()
 
         info['crash_intensity'] = collision_intensities_during_last_time_step
         info['throttle'] = throttle
