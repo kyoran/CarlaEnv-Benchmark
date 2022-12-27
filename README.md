@@ -228,7 +228,7 @@ If you use `CarlaEnv-Benchmark` in your work, please cite it as follows:
 ```latex
 @misc{CarlaEnv-Benchmark,
     title = {CarlaEnv-Benchmark},
-    author = {Xu, Haoran and Chen, Ding and other contributors},
+    author = {Haoran Xu, Ding Chen, Yangru Huang, and other contributors},
     year = {2022},
     howpublished = {\url{https://github.com/kyoran/CarlaEnv-Benchmark}},
     note = {Accessed: YYYY-MM-DD},
