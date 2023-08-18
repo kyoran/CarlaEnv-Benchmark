@@ -2,7 +2,7 @@
 
 An autopilot benchmark for multi-modality visual reinforcement learning, and world modeling of intelligent transportation system, etc.
 
-Our benchmark is constantly being upgraded, including the addition of extreme weather and challenging traffic scenarios.
+**Note:** Our benchmark is constantly being upgraded, including the addition of extreme weather and challenging traffic scenarios.
 
 
 <div align="center">
