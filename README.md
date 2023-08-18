@@ -1,6 +1,10 @@
 # CarlaEnv-Benchmark
 
-An open source benchmark for (multi-task) reinforcement learning of autonomous vehicles, and world modeling of intelligent transportation system, etc.
+An autopilot benchmark for multi-modality visual reinforcement learning, and world modeling of intelligent transportation system, etc.
+
+Our benchmark is constantly being upgraded, including the addition of extreme weather and challenging traffic scenarios.
+
+
 <div align="center">
 <table border="0" border-collapse="collapse">
     <tr>
@@ -201,6 +205,8 @@ is a tunnel where challenging illumination inevitably happens when entering and 
 - ***merging:***
 is a four-lane road that has three lanes randomly blocked by crashed vehicles.
 
+
+
 ### 4.2/Weather
 
 - ***hard_high_light:***
@@ -220,37 +226,3 @@ is the dust with little rain.
 
 - ***hard_noisy_low_light:***
 rain cats and dogs in the midnight.
-
-## 5/Citation
-Publications using `CarlaEnv-Benchmark` are recorded in [Publications]. If you use [repo-name] in your paper, you can also add it to this table by pull request.
-
-If you use `CarlaEnv-Benchmark` in your work, please cite it as follows:
-```latex
-@misc{CarlaEnv-Benchmark,
-    title = {CarlaEnv-Benchmark},
-    author = {Haoran Xu, Ding Chen, Yangru Huang, and other contributors},
-    year = {2022},
-    howpublished = {\url{https://github.com/kyoran/CarlaEnv-Benchmark}},
-    note = {Accessed: YYYY-MM-DD},
-}
-```
-
-***Note***: To specify the version of `CarlaEnv-Benchmark` you are using, the default value `YYYY-MM-DD` in the note field should be replaced with the date of the last change of the framework you are using, i.e. the date of the latest commit.
-
-## 6/Acknowledgements
-Sun Yat-Sen University, Shanghai Jiao Tong University, Peking University, and Peng Cheng Laboratory are the main developers of `CarlaEnv-Benchmark`.
-
-
-<div align="center">
-<table border="0">
-    <tr>
-        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sysu_logo.png" width="80" height="80" alt="sysu" /></td>
-        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/sjtu_logo.png" width="80" height="80" alt="sjtu" /></td>
-        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pku_logo.png" width="80" height="80" alt="pku" /></td>
-        <td align="center"><img src="https://github.com/kyoran/CarlaEnv-Benchmark/blob/main/img/pcnl_logo.png" width="80" height="80" alt="pcnl" /></td>
-    </tr>
-</table>
-</div>
-
-
-The list of developers can be found [here](https://github.com/kyoran/CarlaEnv-Benchmark/graphs/contributors).
